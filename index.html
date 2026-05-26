@@ -389,9 +389,9 @@
   .meta { font-size: 11px; color: #94a3b8; font-family: ui-monospace, Menlo, monospace; }
 
   canvas {
+    width: 100%;
+    height: auto;
     display: block;
-    margin: 0 auto;
-    max-width: 100%;
     border-radius: 8px;
     cursor: crosshair;
     background: #0f172a;
@@ -2415,26 +2415,6 @@ function applyCvdSimulation(imageData, mode) {
   return imageData;
 }
 
-function fitCanvasDisplay() {
-  const frame = currentFrame();
-  if (!frame) return;
-  const card = canvas.parentElement;
-  const containerW = (card.clientWidth || canvas.parentElement.offsetWidth) - 32; // minus card padding
-  const item = currentItem();
-  // Videos = tighter cap so the toolbar + filmstrip + hint all fit; images get a bit more
-  const maxVh = item && item.type === 'video' ? 0.62 : 0.74;
-  const maxH = Math.max(280, window.innerHeight * maxVh);
-  const ratio = frame.height / frame.width;
-  let dispW = Math.min(containerW, frame.width);
-  let dispH = dispW * ratio;
-  if (dispH > maxH) {
-    dispH = maxH;
-    dispW = dispH / ratio;
-  }
-  canvas.style.width = Math.round(dispW) + 'px';
-  canvas.style.height = Math.round(dispH) + 'px';
-}
-
 function renderCurrentFrame() {
   const frame = currentFrame();
   if (!frame) return;
@@ -2449,15 +2429,12 @@ function renderCurrentFrame() {
       applyCvdSimulation(simData, state.cvdSim);
       ctx.putImageData(simData, 0, 0);
     }
-    fitCanvasDisplay();
     drawOverlay();
     const item = currentItem();
     itemMeta.textContent = `${item.name} · ${frame.width}×${frame.height}${item.type === 'video' ? ` · frame ${state.selectedFrameIdx + 1}/${item.frames.length} @ ${frame.t.toFixed(1)}s` : ''}${state.cvdSim && state.cvdSim !== 'none' ? ` · ${state.cvdSim} sim` : ''}`;
   };
   img.src = frame.dataUrl;
 }
-
-window.addEventListener('resize', () => { fitCanvasDisplay(); });
 
 function drawOverlay() {
   if (!state.showOverlay) return;
