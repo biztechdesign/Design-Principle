@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Contrast Ratio Checker</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 24px;
+    background: #0f172a;
+    color: #e2e8f0;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 24px; margin: 0 0 6px; }
+  p.sub { color: #94a3b8; margin: 0 0 20px; font-size: 14px; }
+
+  .upload {
+    border: 2px dashed #334155;
+    border-radius: 12px;
+    padding: 28px;
+    text-align: center;
+    background: #1e293b;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .upload:hover { border-color: #64748b; background: #243246; }
+  .upload input { display: none; }
+  .upload-label { color: #cbd5e1; font-size: 14px; }
+  .upload-label strong { color: #38bdf8; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 20px;
+    margin-top: 20px;
+  }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+  .canvas-card, .panel {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 16px;
+  }
+  canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    cursor: crosshair;
+    background: #0f172a;
+  }
+  .hint {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: #0f172a;
+    border-radius: 6px;
+    border-left: 3px solid #38bdf8;
+  }
+
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .toolbar button {
+    flex: 1;
+    background: #38bdf8;
+    color: #0f172a;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .toolbar button.secondary {
+    background: #334155;
+    color: #e2e8f0;
+  }
+  .toolbar button:hover { filter: brightness(1.08); }
+
+  .pickers { display: flex; flex-direction: column; gap: 12px; }
+  .picker {
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px;
+    background: #0f172a;
+    cursor: pointer;
+  }
+  .picker.active { border-color: #38bdf8; box-shadow: 0 0 0 2px rgba(56,189,248,.2); }
+  .picker.picked .swatch { box-shadow: 0 0 0 2px #22c55e inset; }
+  .picker-head {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 13px; font-weight: 600;
+  }
+  .picker-head .status {
+    font-size: 11px;
+    font-weight: 500;
+    color: #94a3b8;
+  }
+  .picker.picked .picker-head .status { color: #22c55e; }
+  .swatch-row {
+    display: flex; gap: 10px; align-items: center; margin-top: 8px;
+  }
+  .swatch {
+    width: 44px; height: 44px; border-radius: 8px;
+    border: 1px dashed #475569;
+    background: repeating-conic-gradient(#334155 0% 25%, #1e293b 0% 50%) 50% / 12px 12px;
+  }
+  .picker.picked .swatch { border-style: solid; border-color: #475569; }
+  .hexin {
+    flex: 1;
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #e2e8f0;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 13px;
+  }
+
+  .preview {
+    margin-top: 14px;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: #475569;
+  }
+
+  .result {
+    margin-top: 14px;
+    text-align: center;
+    opacity: 0.4;
+    transition: opacity .2s;
+  }
+  .result.ready { opacity: 1; }
+  .ratio {
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .ratio-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+  .pct {
+    margin-top: 6px;
+    font-size: 14px;
+    color: #cbd5e1;
+  }
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    margin: 2px;
+  }
+  .pass { background: #14532d; color: #bbf7d0; }
+  .fail { background: #7f1d1d; color: #fecaca; }
+  .pending { background: #334155; color: #94a3b8; }
+
+  .levels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+    font-size: 12px;
+    opacity: 0.4;
+    transition: opacity .2s;
+  }
+  .levels.ready { opacity: 1; }
+  .level-card {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+  }
+  .level-card .name { color: #94a3b8; margin-bottom: 4px; font-size: 11px; }
+
+  .reset {
+    margin-top: 14px;
+    width: 100%;
+    background: #334155;
+    color: #e2e8f0;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .reset:hover { background: #475569; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Contrast Ratio Checker</h1>
+  <p class="sub">Upload an image, then auto-detect or manually pick the text and background colors.</p>
+
+  <label class="upload" id="uploadBox">
+    <input type="file" id="fileInput" accept="image/*" />
+    <div class="upload-label">
+      <strong>Click to upload</strong> or drag & drop an image here<br>
+      <span style="font-size:12px;color:#64748b">PNG, JPG, WebP</span>
+    </div>
+  </label>
+
+  <div class="grid" id="workArea" style="display:none">
+    <div class="canvas-card">
+      <canvas id="canvas"></canvas>
+      <div class="hint" id="hint">Click <b>Auto-detect</b> on the right, or pick colors manually by clicking points on the image.</div>
+    </div>
+
+    <div class="panel">
+      <div class="toolbar">
+        <button id="autoBtn">Auto-detect colors</button>
+        <button id="clearBtn" class="secondary">Clear</button>
+      </div>
+
+      <div class="pickers">
+        <div class="picker active" id="pickText" data-target="text">
+          <div class="picker-head">
+            <span>Text color</span>
+            <span class="status">Not picked</span>
+          </div>
+          <div class="swatch-row">
+            <div class="swatch" id="swatchText"></div>
+            <input class="hexin" id="hexText" placeholder="#000000" />
+          </div>
+        </div>
+
+        <div class="picker" id="pickBg" data-target="bg">
+          <div class="picker-head">
+            <span>Background color</span>
+            <span class="status">Not picked</span>
+          </div>
+          <div class="swatch-row">
+            <div class="swatch" id="swatchBg"></div>
+            <input class="hexin" id="hexBg" placeholder="#ffffff" />
+          </div>
+        </div>
+      </div>
+
+      <div class="preview" id="preview">Sample Text Aa</div>
+
+      <div class="result" id="resultBox">
+        <div class="ratio" id="ratio">— : 1</div>
+        <div class="ratio-sub">Contrast ratio</div>
+        <div class="pct" id="pct">Pick both colors to see the score</div>
+      </div>
+
+      <div class="levels" id="levelsBox">
+        <div class="level-card">
+          <div class="name">AA · Normal text</div>
+          <span class="badge pending" id="aaNormal">—</span>
+        </div>
+        <div class="level-card">
+          <div class="name">AA · Large text</div>
+          <span class="badge pending" id="aaLarge">—</span>
+        </div>
+        <div class="level-card">
+          <div class="name">AAA · Normal text</div>
+          <span class="badge pending" id="aaaNormal">—</span>
+        </div>
+        <div class="level-card">
+          <div class="name">AAA · Large text</div>
+          <span class="badge pending" id="aaaLarge">—</span>
+        </div>
+      </div>
+
+      <button class="reset" id="resetBtn">Upload another image</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const fileInput = document.getElementById('fileInput');
+  const uploadBox = document.getElementById('uploadBox');
+  const workArea = document.getElementById('workArea');
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const hint = document.getElementById('hint');
+  const resetBtn = document.getElementById('resetBtn');
+  const autoBtn = document.getElementById('autoBtn');
+  const clearBtn = document.getElementById('clearBtn');
+
+  const pickText = document.getElementById('pickText');
+  const pickBg = document.getElementById('pickBg');
+  const swatchText = document.getElementById('swatchText');
+  const swatchBg = document.getElementById('swatchBg');
+  const hexText = document.getElementById('hexText');
+  const hexBg = document.getElementById('hexBg');
+  const preview = document.getElementById('preview');
+  const ratioEl = document.getElementById('ratio');
+  const pctEl = document.getElementById('pct');
+  const resultBox = document.getElementById('resultBox');
+  const levelsBox = document.getElementById('levelsBox');
+
+  let activeTarget = 'text';
+  let img = null;
+  let picked = { text: false, bg: false };
+
+  function setActive(target) {
+    activeTarget = target;
+    pickText.classList.toggle('active', target === 'text');
+    pickBg.classList.toggle('active', target === 'bg');
+    hint.innerHTML = target === 'text'
+      ? 'Click on the <b>text</b> in the image to pick its color.'
+      : 'Click on the <b>background</b> area in the image to pick its color.';
+  }
+  pickText.addEventListener('click', () => setActive('text'));
+  pickBg.addEventListener('click', () => setActive('bg'));
+
+  // Drag & drop
+  ['dragover','dragenter'].forEach(ev => uploadBox.addEventListener(ev, e => {
+    e.preventDefault();
+    uploadBox.style.borderColor = '#38bdf8';
+  }));
+  ['dragleave','drop'].forEach(ev => uploadBox.addEventListener(ev, e => {
+    e.preventDefault();
+    uploadBox.style.borderColor = '';
+  }));
+  uploadBox.addEventListener('drop', e => {
+    const f = e.dataTransfer.files[0];
+    if (f) loadFile(f);
+  });
+
+  fileInput.addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (f) loadFile(f);
+  });
+
+  function loadFile(file) {
+    const url = URL.createObjectURL(file);
+    const i = new Image();
+    i.onload = () => {
+      img = i;
+      drawImage();
+      uploadBox.style.display = 'none';
+      workArea.style.display = 'grid';
+      // Auto-detect on first load
+      setTimeout(autoDetect, 100);
+    };
+    i.src = url;
+  }
+
+  function drawImage() {
+    const maxW = 900;
+    const scale = Math.min(1, maxW / img.naturalWidth);
+    canvas.width = Math.round(img.naturalWidth * scale);
+    canvas.height = Math.round(img.naturalHeight * scale);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  }
+
+  canvas.addEventListener('click', e => {
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) * (canvas.width / rect.width));
+    const y = Math.floor((e.clientY - rect.top) * (canvas.height / rect.height));
+    // Sample a small area for stability (avg 3x3)
+    const data = ctx.getImageData(Math.max(0,x-1), Math.max(0,y-1), 3, 3).data;
+    let r=0,g=0,b=0,n=0;
+    for (let i=0;i<data.length;i+=4){ r+=data[i]; g+=data[i+1]; b+=data[i+2]; n++; }
+    const hex = rgbToHex(Math.round(r/n), Math.round(g/n), Math.round(b/n));
+    if (activeTarget === 'text') {
+      hexText.value = hex;
+      picked.text = true;
+      setActive('bg');
+    } else {
+      hexBg.value = hex;
+      picked.bg = true;
+    }
+    update();
+  });
+
+  [hexText, hexBg].forEach(inp => inp.addEventListener('input', () => {
+    if (inp === hexText && hexToRgb(inp.value)) picked.text = true;
+    if (inp === hexBg && hexToRgb(inp.value)) picked.bg = true;
+    update();
+  }));
+
+  function rgbToHex(r, g, b) {
+    return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+  }
+  function hexToRgb(hex) {
+    if (!hex) return null;
+    let h = hex.replace('#','').trim();
+    if (h.length === 3) h = h.split('').map(c => c+c).join('');
+    if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
+    return {
+      r: parseInt(h.substr(0,2),16),
+      g: parseInt(h.substr(2,2),16),
+      b: parseInt(h.substr(4,2),16),
+    };
+  }
+  function relLum({r,g,b}) {
+    const f = v => {
+      const s = v / 255;
+      return s <= 0.03928 ? s/12.92 : Math.pow((s+0.055)/1.055, 2.4);
+    };
+    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+  }
+  function contrast(c1, c2) {
+    const L1 = relLum(c1), L2 = relLum(c2);
+    const [a,b] = L1 > L2 ? [L1,L2] : [L2,L1];
+    return (a + 0.05) / (b + 0.05);
+  }
+
+  // ---- Auto-detection: cluster pixels into dominant colors, then pick the
+  //      pair with the highest contrast (likely text + background) ----
+  function autoDetect() {
+    if (!img) return;
+    // Downsample for speed
+    const w = canvas.width, h = canvas.height;
+    const sample = ctx.getImageData(0, 0, w, h).data;
+    const step = Math.max(1, Math.floor((w*h) / 30000)); // ~30k samples max
+
+    // Quantize to 4 bits per channel = 4096 buckets
+    const buckets = new Map();
+    for (let i = 0; i < sample.length; i += 4 * step) {
+      const r = sample[i], g = sample[i+1], b = sample[i+2], a = sample[i+3];
+      if (a < 200) continue;
+      const key = (r>>4)<<8 | (g>>4)<<4 | (b>>4);
+      const ent = buckets.get(key);
+      if (ent) { ent.r+=r; ent.g+=g; ent.b+=b; ent.n++; }
+      else buckets.set(key, {r,g,b,n:1});
+    }
+    // Top N by count
+    const top = [...buckets.values()]
+      .map(e => ({ r: e.r/e.n, g: e.g/e.n, b: e.b/e.n, n: e.n }))
+      .sort((a,b) => b.n - a.n)
+      .slice(0, 12);
+
+    if (top.length < 2) return;
+
+    // Background = the single most common color
+    const bg = top[0];
+
+    // Text candidate = among remaining, the one with both:
+    //   - high contrast vs bg
+    //   - reasonable frequency (not a tiny speck)
+    let best = null, bestScore = 0;
+    for (let i = 1; i < top.length; i++) {
+      const c = top[i];
+      const cr = contrast(
+        {r:Math.round(c.r),g:Math.round(c.g),b:Math.round(c.b)},
+        {r:Math.round(bg.r),g:Math.round(bg.g),b:Math.round(bg.b)}
+      );
+      // Score = contrast × log(frequency) — favors common high-contrast colors
+      const score = cr * Math.log(c.n + 1);
+      if (score > bestScore) { bestScore = score; best = c; }
+    }
+    if (!best) return;
+
+    hexBg.value   = rgbToHex(Math.round(bg.r),   Math.round(bg.g),   Math.round(bg.b));
+    hexText.value = rgbToHex(Math.round(best.r), Math.round(best.g), Math.round(best.b));
+    picked.text = true;
+    picked.bg = true;
+    hint.innerHTML = 'Auto-detected dominant colors. Click <b>Text color</b> or <b>Background color</b> on the right, then click on the image to override.';
+    update();
+  }
+
+  autoBtn.addEventListener('click', autoDetect);
+  clearBtn.addEventListener('click', () => {
+    hexText.value = '';
+    hexBg.value = '';
+    picked = { text: false, bg: false };
+    setActive('text');
+    update();
+  });
+
+  function setStatus(pickerEl, isPicked) {
+    pickerEl.classList.toggle('picked', isPicked);
+    pickerEl.querySelector('.status').textContent = isPicked ? 'Picked' : 'Not picked';
+  }
+
+  function update() {
+    setStatus(pickText, picked.text);
+    setStatus(pickBg, picked.bg);
+
+    const t = hexToRgb(hexText.value);
+    const b = hexToRgb(hexBg.value);
+
+    swatchText.style.background = t ? hexText.value : '';
+    swatchBg.style.background = b ? hexBg.value : '';
+
+    if (t && b && picked.text && picked.bg) {
+      preview.style.color = hexText.value;
+      preview.style.background = hexBg.value;
+    } else {
+      preview.style.color = '#475569';
+      preview.style.background = '#0f172a';
+    }
+
+    if (!t || !b || !picked.text || !picked.bg) {
+      ratioEl.textContent = '— : 1';
+      pctEl.textContent = 'Pick both colors to see the score';
+      resultBox.classList.remove('ready');
+      levelsBox.classList.remove('ready');
+      ['aaNormal','aaLarge','aaaNormal','aaaLarge'].forEach(id => {
+        const el = document.getElementById(id);
+        el.textContent = '—';
+        el.className = 'badge pending';
+      });
+      return;
+    }
+
+    resultBox.classList.add('ready');
+    levelsBox.classList.add('ready');
+
+    const cr = contrast(t, b);
+    ratioEl.textContent = cr.toFixed(2) + ' : 1';
+
+    const pct = Math.max(0, Math.min(100, ((cr - 1) / 20) * 100));
+    let verdict;
+    if (cr >= 7) verdict = 'Excellent';
+    else if (cr >= 4.5) verdict = 'Good';
+    else if (cr >= 3) verdict = 'Fair (large text only)';
+    else verdict = 'Poor — hard to read';
+    pctEl.innerHTML = `Score: <b>${pct.toFixed(1)}%</b> · ${verdict}`;
+
+    setBadge('aaNormal',  cr >= 4.5);
+    setBadge('aaLarge',   cr >= 3);
+    setBadge('aaaNormal', cr >= 7);
+    setBadge('aaaLarge',  cr >= 4.5);
+  }
+  function setBadge(id, ok) {
+    const el = document.getElementById(id);
+    el.textContent = ok ? 'Pass' : 'Fail';
+    el.className = 'badge ' + (ok ? 'pass' : 'fail');
+  }
+
+  resetBtn.addEventListener('click', () => {
+    img = null;
+    fileInput.value = '';
+    workArea.style.display = 'none';
+    uploadBox.style.display = 'block';
+    hexText.value = '';
+    hexBg.value = '';
+    picked = { text: false, bg: false };
+    setActive('text');
+    update();
+  });
+
+  update();
+</script>
+</body>
+</html>
