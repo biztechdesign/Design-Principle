@@ -958,48 +958,54 @@ function computeWeightMap(imgData, gw, gh) {
   return map;
 }
 
-function computeAlignment(weightMap) {
-  const sortedAll = Array.from(weightMap).sort((a, b) => b - a);
-  const thresh = sortedAll[Math.floor(sortedAll.length * 0.25)] || 0;
+function computeAlignment(imgData) {
+  // Detect text-like rows by counting high-frequency horizontal luminance edges.
+  // Text has many rapid dark-light transitions per row; soft background imagery does not.
+  const { data, width: W, height: H } = imgData;
+  const sampleStep = Math.max(1, Math.floor(W / 260));
+  const rowStep = Math.max(1, Math.floor(H / 200));
+  const EDGE_THRESH = 70;   // luminance delta to qualify as an edge
+  const MIN_EDGES = 8;      // edges per row required to consider it a text row
 
   const rows = [];
-  for (let gy = 0; gy < GRID_H; gy++) {
-    let start = -1, end = -1;
-    let totalW = 0, weightedX = 0;
-    for (let gx = 0; gx < GRID_W; gx++) {
-      const v = weightMap[gy * GRID_W + gx];
-      if (v >= thresh) {
-        if (start === -1) start = gx;
-        end = gx;
-        totalW += v;
-        weightedX += (gx + 0.5) * v;
+  for (let y = 0; y < H; y += rowStep) {
+    const edges = [];
+    let prevLum = null;
+    for (let x = 0; x < W; x += sampleStep) {
+      const i = (y * W + x) * 4;
+      if (data[i + 3] < 200) { prevLum = null; continue; }
+      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      if (prevLum !== null && Math.abs(lum - prevLum) > EDGE_THRESH) {
+        edges.push(x);
       }
+      prevLum = lum;
     }
-    if (start >= 0 && totalW > 0) {
-      rows.push({
-        start: start / GRID_W,
-        end: (end + 1) / GRID_W,
-        center: weightedX / totalW / GRID_W,
-        width: (end + 1 - start) / GRID_W,
-      });
+    if (edges.length >= MIN_EDGES) {
+      const start = edges[0] / W;
+      const end = edges[edges.length - 1] / W;
+      rows.push({ start, end, center: (start + end) / 2, width: end - start });
     }
   }
+
   if (rows.length < 3) return { type: 'unknown', label: '—', score: 0 };
 
-  const avgWidth = rows.reduce((s, r) => s + r.width, 0) / rows.length;
-  if (avgWidth > 0.85) return { type: 'fullwidth', label: 'Full-width', score: 100 };
+  // Trim outliers (top/bottom 10% by width) so a stray full-width row doesn't dominate.
+  rows.sort((a, b) => a.width - b.width);
+  const trimN = Math.floor(rows.length * 0.1);
+  const trimmed = rows.slice(trimN, rows.length - trimN);
+  if (trimmed.length < 3) return { type: 'unknown', label: '—', score: 0 };
 
-  const meaningful = rows.filter(r => r.width > 0.1 && r.width < 0.9);
-  if (meaningful.length < 3) return { type: 'unknown', label: '—', score: 0 };
+  const avgWidth = trimmed.reduce((s, r) => s + r.width, 0) / trimmed.length;
+  if (avgWidth > 0.88) return { type: 'fullwidth', label: 'Full-width', score: 100 };
 
   const stats = arr => {
     const m = arr.reduce((s, x) => s + x, 0) / arr.length;
     const v = arr.reduce((s, x) => s + (x - m) ** 2, 0) / arr.length;
     return { mean: m, std: Math.sqrt(v) };
   };
-  const sStarts = stats(meaningful.map(r => r.start));
-  const sEnds = stats(meaningful.map(r => r.end));
-  const sCenters = stats(meaningful.map(r => r.center));
+  const sStarts = stats(trimmed.map(r => r.start));
+  const sEnds = stats(trimmed.map(r => r.end));
+  const sCenters = stats(trimmed.map(r => r.center));
 
   const candidates = [
     { type: 'left', std: sStarts.std },
@@ -1008,14 +1014,10 @@ function computeAlignment(weightMap) {
   ].sort((a, b) => a.std - b.std);
 
   const best = candidates[0];
-  if (best.std > 0.12) return { type: 'mixed', label: 'Mixed / asymmetric', score: 40 };
+  if (best.std > 0.14) return { type: 'mixed', label: 'Mixed / asymmetric', score: 40 };
 
-  const score = Math.max(0, Math.min(100, (1 - best.std / 0.15) * 100));
-  const labels = {
-    left: 'Left-aligned',
-    right: 'Right-aligned',
-    center: 'Center-aligned',
-  };
+  const score = Math.max(0, Math.min(100, (1 - best.std / 0.18) * 100));
+  const labels = { left: 'Left-aligned', right: 'Right-aligned', center: 'Center-aligned' };
   return { type: best.type, label: labels[best.type], score };
 }
 
@@ -1084,8 +1086,7 @@ function computeComposition(weightMap) {
     const yLabel = fy < 0.33 ? 'top' : fy > 0.66 ? 'bottom' : 'middle';
     focal = { box: bestRegion, label: `${yLabel}-${xLabel}` };
   }
-  const alignment = computeAlignment(weightMap);
-  return { rot, hBal, vBal, focal, alignment };
+  return { rot, hBal, vBal, focal };
 }
 
 function computeWhitespace(imgData, bg) {
@@ -1115,6 +1116,7 @@ function runAudit(imgData, brandColors) {
   const brand = computeBrand(imgData, brandColors);
   const weightMap = computeWeightMap(imgData, GRID_W, GRID_H);
   const composition = computeComposition(weightMap);
+  composition.alignment = computeAlignment(imgData);
   const whitespace = computeWhitespace(imgData, contrastRes ? contrastRes.bg : null);
   return { contrast: contrastRes, brand, composition, whitespace };
 }
