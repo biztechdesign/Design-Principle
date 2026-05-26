@@ -611,6 +611,184 @@
     color: #64748b;
     font-size: 14px;
   }
+
+  /* === New for batch 1: palette / harmony / histogram / sim toggles / etc === */
+  .palette-row { display: flex; gap: 4px; margin: 6px 0 8px; }
+  .palette-swatch {
+    flex: 1;
+    height: 36px;
+    border-radius: 6px;
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.06);
+    cursor: help;
+  }
+  .palette-swatch::after {
+    content: attr(data-pct);
+    position: absolute;
+    bottom: 2px; left: 0; right: 0;
+    text-align: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    font-family: ui-monospace, Menlo, monospace;
+  }
+  .palette-info { font-size: 11px; color: #94a3b8; margin: 0 0 8px; }
+  .palette-info b { color: #cbd5e1; }
+
+  /* Mini histogram */
+  .histogram {
+    display: flex;
+    gap: 1px;
+    align-items: flex-end;
+    height: 36px;
+    background: #1e293b;
+    border-radius: 4px;
+    padding: 4px;
+    margin-top: 6px;
+  }
+  .histogram .bar {
+    flex: 1;
+    background: linear-gradient(180deg, #38bdf8, #1e6391);
+    min-height: 1px;
+    border-radius: 1px;
+  }
+
+  /* Mini metrics grid (2-col) */
+  .mini-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .mini-cell {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 6px 8px;
+  }
+  .mini-cell .mlabel {
+    font-size: 10px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 2px;
+  }
+  .mini-cell .mval {
+    font-size: 15px;
+    font-weight: 700;
+    color: #f1f5f9;
+    font-family: ui-monospace, Menlo, monospace;
+  }
+  .mini-cell .msub {
+    font-size: 10px;
+    color: #64748b;
+    margin-top: 2px;
+  }
+
+  /* CVD sim toggle row */
+  .sim-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-top: 6px;
+  }
+  .sim-btn {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #cbd5e1;
+    padding: 6px 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 600;
+    text-align: center;
+  }
+  .sim-btn:hover { background: #243246; }
+  .sim-btn.active {
+    background: #38bdf8;
+    color: #0f172a;
+    border-color: #38bdf8;
+  }
+
+  /* Brand hierarchy bars */
+  .brand-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    font-size: 11px;
+  }
+  .brand-bar-swatch {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.1);
+    flex: 0 0 auto;
+  }
+  .brand-bar-track {
+    flex: 1;
+    height: 8px;
+    background: #1e293b;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .brand-bar-fill {
+    height: 100%;
+    background: currentColor;
+    border-radius: 4px;
+  }
+  .brand-bar-pct {
+    flex: 0 0 auto;
+    font-family: ui-monospace, Menlo, monospace;
+    font-weight: 600;
+    color: #cbd5e1;
+    min-width: 36px;
+    text-align: right;
+  }
+
+  /* Platform fit tags */
+  .platform-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+  }
+  .platform-tag {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #cbd5e1;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .platform-tag.match {
+    background: rgba(34,197,94,0.15);
+    border-color: rgba(34,197,94,0.4);
+    color: #bbf7d0;
+  }
+
+  /* Section sub-heading inside cards */
+  .sub-head {
+    font-size: 10px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin: 10px 0 4px;
+    font-weight: 600;
+  }
+  .sub-head:first-child { margin-top: 0; }
+
+  /* Warning row */
+  .warning-row {
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.3);
+    color: #fde68a;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    margin-top: 8px;
+  }
 </style>
 </head>
 <body>
@@ -691,6 +869,24 @@
         <div class="selected-banner" id="selectedBanner">Selected item</div>
 
         <div class="card">
+          <h3>Format &amp; platform fit</h3>
+          <div class="mini-grid">
+            <div class="mini-cell">
+              <div class="mlabel">Dimensions</div>
+              <div class="mval" id="fmtDims">—</div>
+              <div class="msub" id="fmtMP">—</div>
+            </div>
+            <div class="mini-cell">
+              <div class="mlabel">Aspect ratio</div>
+              <div class="mval" id="fmtAspect">—</div>
+              <div class="msub" id="fmtAspectNum">—</div>
+            </div>
+          </div>
+          <div class="sub-head">Platforms it fits</div>
+          <div class="platform-tags" id="platformTags"></div>
+        </div>
+
+        <div class="card">
           <h3>Brand colors</h3>
           <div class="brand-input-row">
             <input id="brandHex" placeholder="#0fb5b5" maxlength="7" />
@@ -698,6 +894,34 @@
           </div>
           <div class="chips" id="brandChips"></div>
           <div id="brandResult"><span class="muted">Add 1–6 brand hex codes to check compliance.</span></div>
+          <div id="brandHierarchy"></div>
+        </div>
+
+        <div class="card">
+          <h3>Color analysis</h3>
+          <div class="sub-head">Dominant palette</div>
+          <div class="palette-row" id="paletteRow"></div>
+          <p class="palette-info" id="paletteInfo">—</p>
+
+          <div class="sub-head">Tone</div>
+          <div class="mini-grid">
+            <div class="mini-cell"><div class="mlabel">Saturation</div><div class="mval" id="satVal">—</div><div class="msub" id="satVerdict">—</div></div>
+            <div class="mini-cell"><div class="mlabel">Brightness</div><div class="mval" id="brightVal">—</div><div class="msub" id="brightVerdict">—</div></div>
+            <div class="mini-cell"><div class="mlabel">Harmony</div><div class="mval" id="harmonyVal" style="font-size:13px">—</div></div>
+            <div class="mini-cell"><div class="mlabel">Temperature</div><div class="mval" id="tempVal" style="font-size:13px">—</div></div>
+          </div>
+
+          <div class="sub-head">Luminance histogram</div>
+          <div class="histogram" id="histogram"></div>
+          <p class="palette-info" id="histInfo" style="margin-top:4px">—</p>
+
+          <div class="sub-head">Color-blindness preview</div>
+          <div class="sim-row">
+            <button class="sim-btn active" data-sim="none" type="button">Normal</button>
+            <button class="sim-btn" data-sim="protan" type="button">Protan</button>
+            <button class="sim-btn" data-sim="deutan" type="button">Deutan</button>
+            <button class="sim-btn" data-sim="tritan" type="button">Tritan</button>
+          </div>
         </div>
 
         <div class="card">
@@ -733,10 +957,29 @@
         <div class="card">
           <h3>Composition</h3>
           <div class="metric-row"><span>Rule of thirds</span><span class="metric-val" id="rotScore">—</span></div>
+          <div class="metric-row"><span>Golden ratio</span><span class="metric-val" id="goldenScore">—</span></div>
           <div class="metric-row"><span>Horizontal balance</span><span class="metric-val" id="hBal">—</span></div>
           <div class="metric-row"><span>Vertical balance</span><span class="metric-val" id="vBal">—</span></div>
+          <div class="metric-row"><span>Symmetry</span><span class="metric-val" id="symScore">—</span></div>
+          <div class="metric-row"><span>Visual hierarchy</span><span class="metric-val" id="hierScore">—</span></div>
           <div class="metric-row"><span>Focal point</span><span class="metric-val" id="focalPos">—</span></div>
           <div class="metric-row"><span>Text alignment</span><span class="metric-val" id="alignType">—</span></div>
+          <div class="metric-row"><span>Edge safe-area</span><span class="metric-val" id="safeArea">—</span></div>
+        </div>
+
+        <div class="card">
+          <h3>Typography</h3>
+          <div class="metric-row"><span>Text density</span><span class="metric-val" id="textDensity">—</span></div>
+          <div class="metric-row"><span>Font tiers</span><span class="metric-val" id="fontTiers">—</span></div>
+          <div class="metric-row"><span>Line spacing</span><span class="metric-val" id="lineSpacing">—</span></div>
+          <div id="typoWarn"></div>
+        </div>
+
+        <div class="card">
+          <h3>Visual quality</h3>
+          <div class="metric-row"><span>Sharpness</span><span class="metric-val" id="sharpVal">—</span></div>
+          <div class="metric-row"><span>Contrast spread</span><span class="metric-val" id="contrastSpread">—</span></div>
+          <div class="metric-row"><span>Clutter</span><span class="metric-val" id="clutterVal">—</span></div>
         </div>
 
         <div class="card">
@@ -780,6 +1023,7 @@ const state = {
   showOverlay: true,
   activeTarget: 'text',
   manualPick: { text: false, bg: false, hexText: '', hexBg: '' },
+  cvdSim: 'none',
 };
 try { state.brandColors = JSON.parse(localStorage.getItem('brandColors') || '[]'); } catch (e) {}
 
@@ -1111,14 +1355,387 @@ function computeWhitespace(imgData, bg) {
   return { pct, verdict, cls };
 }
 
+// === Color analysis ===
+function computePalette(imgData) {
+  const { data, width: W, height: H } = imgData;
+  const step = Math.max(1, Math.floor((W * H) / 30000));
+  const buckets = new Map();
+  let total = 0;
+  for (let i = 0; i < data.length; i += 4 * step) {
+    const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+    if (a < 200) continue;
+    total++;
+    const key = (r>>4)<<8 | (g>>4)<<4 | (b>>4);
+    const ent = buckets.get(key);
+    if (ent) { ent.r += r; ent.g += g; ent.b += b; ent.n++; }
+    else buckets.set(key, { r, g, b, n: 1 });
+  }
+  return [...buckets.values()]
+    .map(e => ({ r: e.r/e.n, g: e.g/e.n, b: e.b/e.n, n: e.n, share: total ? (e.n/total)*100 : 0 }))
+    .sort((a,b) => b.n - a.n)
+    .slice(0, 6);
+}
+
+function computeHarmony(palette) {
+  if (palette.length < 2) return { type: 'mono', label: 'Monochromatic' };
+  const significant = palette.filter(c => {
+    const { s } = hsl(c.r, c.g, c.b);
+    return s > 0.15;
+  });
+  if (significant.length < 2) return { type: 'mono', label: 'Monochromatic / grayscale' };
+  const hues = significant.slice(0, 5).map(c => hsl(c.r, c.g, c.b).h * 360);
+  hues.sort((a, b) => a - b);
+  const diffs = [];
+  for (let i = 1; i < hues.length; i++) diffs.push(hues[i] - hues[i-1]);
+  diffs.push(360 - hues[hues.length-1] + hues[0]);
+  const maxGap = Math.max(...diffs);
+  const range = 360 - maxGap;
+  if (range < 30) return { type: 'mono', label: 'Monochromatic' };
+  if (range < 90) return { type: 'analogous', label: 'Analogous' };
+  if (significant.length === 2) return { type: 'comp', label: 'Complementary' };
+  if (significant.length === 3 && Math.abs(diffs[0] - diffs[1]) < 40 && Math.abs(diffs[1] - diffs[2]) < 40) {
+    return { type: 'triadic', label: 'Triadic' };
+  }
+  if (range < 150) return { type: 'split', label: 'Split-complementary' };
+  if (range < 220) return { type: 'comp', label: 'Complementary' };
+  return { type: 'mixed', label: 'Multi-hue' };
+}
+
+function computeTemperature(palette) {
+  let warm = 0, cool = 0, weight = 0;
+  for (const c of palette) {
+    const { h, s } = hsl(c.r, c.g, c.b);
+    if (s < 0.15) continue;
+    const w = c.share * s;
+    weight += w;
+    const hue = h * 360;
+    if (hue < 60 || hue > 300) warm += w;
+    else if (hue >= 150 && hue <= 270) cool += w;
+  }
+  if (weight < 0.5) return { type: 'neutral', label: 'Neutral' };
+  const ratio = (warm - cool) / weight;
+  if (ratio > 0.3) return { type: 'warm', label: 'Warm' };
+  if (ratio < -0.3) return { type: 'cool', label: 'Cool' };
+  return { type: 'neutral', label: 'Neutral' };
+}
+
+function computeTone(imgData) {
+  const { data, width: W, height: H } = imgData;
+  const step = Math.max(1, Math.floor((W * H) / 30000)) * 4;
+  let sumS = 0, sumL = 0, n = 0;
+  const histBins = 32;
+  const hist = new Float32Array(histBins);
+  for (let i = 0; i < data.length; i += step) {
+    const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+    if (a < 200) continue;
+    const { s, l } = hsl(r, g, b);
+    sumS += s; sumL += l; n++;
+    hist[Math.min(histBins - 1, Math.floor(l * histBins))]++;
+  }
+  const avgS = n ? sumS / n : 0;
+  const avgL = n ? sumL / n : 0;
+  const maxBin = Math.max(...hist);
+  const histNorm = maxBin ? Array.from(hist).map(v => v / maxBin) : Array(histBins).fill(0);
+  let minBin = -1, maxBinIdx = -1;
+  for (let i = 0; i < histBins; i++) {
+    if (hist[i] > n * 0.005) {
+      if (minBin === -1) minBin = i;
+      maxBinIdx = i;
+    }
+  }
+  const lumRange = maxBinIdx > minBin ? (maxBinIdx - minBin) / (histBins - 1) : 0;
+  return { saturation: avgS * 100, brightness: avgL * 100, histogram: histNorm, lumRange };
+}
+
+function computeBrandHierarchy(imgData, brandColors) {
+  if (!brandColors.length) return null;
+  const brands = brandColors.map(hex => ({ hex, rgb: hexToRgb(hex), count: 0 })).filter(b => b.rgb);
+  if (!brands.length) return null;
+  const { data, width: W, height: H } = imgData;
+  const step = Math.max(1, Math.floor((W * H) / 25000)) * 4;
+  let total = 0;
+  for (let i = 0; i < data.length; i += step) {
+    const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+    if (a < 200) continue;
+    total++;
+    let minE = Infinity, closest = null;
+    for (const bc of brands) {
+      const e = deltaE_approx({r,g,b}, bc.rgb);
+      if (e < minE) { minE = e; closest = bc; }
+    }
+    if (minE <= 25 && closest) closest.count++;
+  }
+  return brands.map(b => ({ hex: b.hex, pct: total ? (b.count / total) * 100 : 0 })).sort((a,b) => b.pct - a.pct);
+}
+
+// === Composition extras ===
+function computeGoldenScore(weightMap) {
+  const sortedDesc = Array.from(weightMap).sort((a, b) => b - a);
+  const topThresh = sortedDesc[Math.floor(sortedDesc.length * 0.1)] || 0;
+  let sumW = 0, cx = 0, cy = 0;
+  for (let gy = 0; gy < GRID_H; gy++) {
+    for (let gx = 0; gx < GRID_W; gx++) {
+      const v = weightMap[gy * GRID_W + gx];
+      if (v >= topThresh) { sumW += v; cx += (gx + 0.5) * v; cy += (gy + 0.5) * v; }
+    }
+  }
+  cx /= sumW || 1; cy /= sumW || 1;
+  const ncx = cx / GRID_W, ncy = cy / GRID_H;
+  const pp = [[0.382, 0.382], [0.618, 0.382], [0.382, 0.618], [0.618, 0.618]];
+  let minDist = Infinity;
+  for (const [px, py] of pp) {
+    const d = Math.hypot(ncx - px, ncy - py);
+    if (d < minDist) minDist = d;
+  }
+  return Math.max(0, Math.min(1, 1 - minDist / (Math.SQRT2 * 0.5))) * 100;
+}
+
+function computeSymmetry(imgData) {
+  const { data, width: W, height: H } = imgData;
+  const sampleW = 64, sampleH = 48;
+  const cellW = W / sampleW, cellH = H / sampleH;
+  let hDiff = 0, hCount = 0;
+  for (let gy = 0; gy < sampleH; gy++) {
+    for (let gx = 0; gx < Math.floor(sampleW / 2); gx++) {
+      const x1 = Math.floor(gx * cellW + cellW / 2);
+      const x2 = Math.floor((sampleW - 1 - gx) * cellW + cellW / 2);
+      const y = Math.floor(gy * cellH + cellH / 2);
+      const i1 = (y * W + x1) * 4;
+      const i2 = (y * W + x2) * 4;
+      const d = Math.abs(data[i1] - data[i2]) + Math.abs(data[i1+1] - data[i2+1]) + Math.abs(data[i1+2] - data[i2+2]);
+      hDiff += d; hCount++;
+    }
+  }
+  let vDiff = 0, vCount = 0;
+  for (let gx = 0; gx < sampleW; gx++) {
+    for (let gy = 0; gy < Math.floor(sampleH / 2); gy++) {
+      const y1 = Math.floor(gy * cellH + cellH / 2);
+      const y2 = Math.floor((sampleH - 1 - gy) * cellH + cellH / 2);
+      const x = Math.floor(gx * cellW + cellW / 2);
+      const i1 = (y1 * W + x) * 4;
+      const i2 = (y2 * W + x) * 4;
+      const d = Math.abs(data[i1] - data[i2]) + Math.abs(data[i1+1] - data[i2+1]) + Math.abs(data[i1+2] - data[i2+2]);
+      vDiff += d; vCount++;
+    }
+  }
+  const hSym = hCount ? Math.max(0, 100 - (hDiff / hCount) / 3) : 0;
+  const vSym = vCount ? Math.max(0, 100 - (vDiff / vCount) / 3) : 0;
+  const best = Math.max(hSym, vSym);
+  return { score: best, axis: hSym >= vSym ? 'horizontal' : 'vertical', hSym, vSym };
+}
+
+function computeHierarchy(weightMap, focal) {
+  let totalW = 0;
+  for (const v of weightMap) totalW += v;
+  if (!focal || totalW === 0) return { score: 0 };
+  let focalW = 0, focalCells = 0;
+  for (let gy = focal.box.minY; gy <= focal.box.maxY; gy++) {
+    for (let gx = focal.box.minX; gx <= focal.box.maxX; gx++) {
+      focalW += weightMap[gy * GRID_W + gx];
+      focalCells++;
+    }
+  }
+  const focalArea = focalCells / (GRID_W * GRID_H);
+  const focalWPct = focalW / totalW;
+  const concentration = focalArea > 0 ? focalWPct / focalArea : 1;
+  const score = Math.max(0, Math.min(100, ((concentration - 1) / 2) * 100));
+  return { score, focalWPct: focalWPct * 100, focalArea: focalArea * 100 };
+}
+
+function computeSafeArea(weightMap) {
+  const sortedDesc = Array.from(weightMap).sort((a, b) => b - a);
+  const thresh = sortedDesc[Math.floor(sortedDesc.length * 0.15)] || 0;
+  let touches = 0;
+  const border = 1;
+  for (let gy = 0; gy < GRID_H; gy++) {
+    for (let gx = 0; gx < GRID_W; gx++) {
+      if (weightMap[gy * GRID_W + gx] < thresh) continue;
+      if (gx < border || gx >= GRID_W - border || gy < border || gy >= GRID_H - border) touches++;
+    }
+  }
+  return { ok: touches < 4, touches };
+}
+
+// === Typography ===
+function computeTextStats(imgData) {
+  const { data, width: W, height: H } = imgData;
+  const sampleStep = Math.max(1, Math.floor(W / 260));
+  const rowStep = Math.max(1, Math.floor(H / 200));
+  const EDGE_THRESH = 70, MIN_EDGES = 8;
+
+  const rows = [];
+  for (let y = 0; y < H; y += rowStep) {
+    const edges = [];
+    let prevLum = null;
+    for (let x = 0; x < W; x += sampleStep) {
+      const i = (y * W + x) * 4;
+      if (data[i + 3] < 200) { prevLum = null; continue; }
+      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      if (prevLum !== null && Math.abs(lum - prevLum) > EDGE_THRESH) edges.push(x);
+      prevLum = lum;
+    }
+    if (edges.length >= MIN_EDGES) {
+      rows.push({ y, edgeCount: edges.length });
+    }
+  }
+  const totalRows = Math.max(1, Math.floor(H / rowStep));
+  const density = (rows.length / totalRows) * 100;
+
+  const blocks = [];
+  let cur = null;
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    if (cur && rows[i-1].y + rowStep * 3 >= r.y) {
+      cur.height = r.y + rowStep - cur.startY;
+      cur.avgEdges += r.edgeCount;
+      cur.count++;
+    } else {
+      if (cur) { cur.avgEdges /= cur.count; blocks.push(cur); }
+      cur = { startY: r.y, height: rowStep, avgEdges: r.edgeCount, count: 1 };
+    }
+  }
+  if (cur) { cur.avgEdges /= cur.count; blocks.push(cur); }
+
+  const heights = blocks.map(b => b.height).sort((a,b) => b - a);
+  let tiers = heights.length > 0 ? 1 : 0;
+  if (heights.length >= 2) {
+    for (let i = 1; i < heights.length; i++) {
+      if (heights[0] / heights[i] > 1.6) { tiers = 2; break; }
+    }
+  }
+  if (tiers === 2 && heights.length >= 3) {
+    for (let i = 2; i < heights.length; i++) {
+      if (heights[1] / heights[i] > 1.5) { tiers = 3; break; }
+    }
+  }
+
+  let spacings = [];
+  for (let i = 1; i < blocks.length; i++) {
+    spacings.push(blocks[i].startY - (blocks[i-1].startY + blocks[i-1].height));
+  }
+  let spacingConsistency = 100;
+  if (spacings.length >= 2) {
+    const m = spacings.reduce((s,v) => s+v, 0) / spacings.length;
+    const v = spacings.reduce((s,x) => s + (x-m)**2, 0) / spacings.length;
+    const std = Math.sqrt(v);
+    spacingConsistency = m > 0 ? Math.max(0, 100 - (std / m) * 100) : 100;
+  }
+
+  return { density: Math.min(100, density), tiers, spacingConsistency, blockCount: blocks.length, excessive: density > 30 };
+}
+
+// === Visual quality ===
+function computeSharpness(imgData) {
+  const { data, width: W, height: H } = imgData;
+  let sumLap = 0, sumLapSq = 0, n = 0;
+  const step = Math.max(1, Math.floor(W / 200));
+  const lum = i => 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+  for (let y = step; y < H - step; y += step) {
+    for (let x = step; x < W - step; x += step) {
+      const i = (y * W + x) * 4;
+      const lap = lum((y * W + x - step) * 4) + lum((y * W + x + step) * 4)
+                + lum(((y - step) * W + x) * 4) + lum(((y + step) * W + x) * 4)
+                - 4 * lum(i);
+      sumLap += lap; sumLapSq += lap * lap; n++;
+    }
+  }
+  if (!n) return { variance: 0, verdict: '—', cls: '' };
+  const variance = sumLapSq / n - (sumLap / n) ** 2;
+  let verdict, cls;
+  if (variance < 50) { verdict = 'Blurry'; cls = 'val-fail'; }
+  else if (variance < 200) { verdict = 'Soft'; cls = 'val-warn'; }
+  else { verdict = 'Sharp'; cls = 'val-pass'; }
+  return { variance, verdict, cls };
+}
+
+function computeClutter(weightMap) {
+  const sortedDesc = Array.from(weightMap).sort((a, b) => b - a);
+  const thresh = sortedDesc[Math.floor(sortedDesc.length * 0.2)] || 0;
+  const visited = new Uint8Array(GRID_W * GRID_H);
+  let components = 0;
+  for (let gy = 0; gy < GRID_H; gy++) {
+    for (let gx = 0; gx < GRID_W; gx++) {
+      const idx = gy * GRID_W + gx;
+      if (visited[idx] || weightMap[idx] < thresh) continue;
+      const stack = [[gx, gy]];
+      let size = 0;
+      while (stack.length) {
+        const [x, y] = stack.pop();
+        if (x < 0 || y < 0 || x >= GRID_W || y >= GRID_H) continue;
+        const k = y * GRID_W + x;
+        if (visited[k] || weightMap[k] < thresh) continue;
+        visited[k] = 1; size++;
+        stack.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]);
+      }
+      if (size >= 3) components++;
+    }
+  }
+  let verdict, cls;
+  if (components <= 2) { verdict = 'Clean'; cls = 'val-pass'; }
+  else if (components <= 5) { verdict = 'Moderate'; cls = 'val-warn'; }
+  else { verdict = 'Cluttered'; cls = 'val-fail'; }
+  return { components, verdict, cls };
+}
+
+// === Format / platform ===
+function computeFormat(width, height) {
+  const aspect = width / height;
+  const platforms = [
+    { name: 'IG Square 1:1', r: 1 },
+    { name: 'IG Portrait 4:5', r: 4/5 },
+    { name: 'IG/Reel/Story 9:16', r: 9/16 },
+    { name: 'IG Landscape 1.91:1', r: 1.91 },
+    { name: 'FB/LinkedIn Hero', r: 1.91 },
+    { name: 'OG image', r: 1.91 },
+    { name: 'YouTube 16:9', r: 16/9 },
+    { name: 'YT Thumbnail', r: 16/9 },
+    { name: 'X / Twitter post 16:9', r: 16/9 },
+    { name: 'A4 portrait', r: 1/1.414 },
+    { name: 'A4 landscape', r: 1.414 },
+  ];
+  const matches = [...new Set(platforms.filter(p => Math.abs(aspect - p.r) / p.r < 0.05).map(p => p.name))];
+  let aspectLabel;
+  if (aspect >= 0.95 && aspect <= 1.05) aspectLabel = '1:1';
+  else if (aspect >= 0.78 && aspect <= 0.82) aspectLabel = '4:5';
+  else if (aspect >= 0.55 && aspect <= 0.58) aspectLabel = '9:16';
+  else if (aspect >= 1.85 && aspect <= 1.96) aspectLabel = '1.91:1';
+  else if (aspect >= 1.74 && aspect <= 1.80) aspectLabel = '16:9';
+  else if (aspect >= 1.32 && aspect <= 1.36) aspectLabel = '4:3';
+  else if (aspect >= 1.40 && aspect <= 1.42) aspectLabel = '√2 (A-paper)';
+  else aspectLabel = aspect >= 1 ? `${aspect.toFixed(2)}:1` : `1:${(1/aspect).toFixed(2)}`;
+  return {
+    width, height,
+    megapixels: (width * height / 1e6).toFixed(2),
+    aspect, aspectLabel,
+    aspectNum: aspect.toFixed(3),
+    platforms: matches,
+  };
+}
+
 function runAudit(imgData, brandColors) {
   const contrastRes = detectBgAndContrast(imgData);
   const brand = computeBrand(imgData, brandColors);
+  const brandHierarchy = computeBrandHierarchy(imgData, brandColors);
   const weightMap = computeWeightMap(imgData, GRID_W, GRID_H);
   const composition = computeComposition(weightMap);
   composition.alignment = computeAlignment(imgData);
+  composition.golden = computeGoldenScore(weightMap);
+  composition.symmetry = computeSymmetry(imgData);
+  composition.hierarchy = computeHierarchy(weightMap, composition.focal);
+  composition.safeArea = computeSafeArea(weightMap);
   const whitespace = computeWhitespace(imgData, contrastRes ? contrastRes.bg : null);
-  return { contrast: contrastRes, brand, composition, whitespace };
+  const palette = computePalette(imgData);
+  const harmony = computeHarmony(palette);
+  const temperature = computeTemperature(palette);
+  const tone = computeTone(imgData);
+  const textStats = computeTextStats(imgData);
+  const sharpness = computeSharpness(imgData);
+  const clutter = computeClutter(weightMap);
+  const format = computeFormat(imgData.width, imgData.height);
+  return {
+    contrast: contrastRes, brand, brandHierarchy, composition, whitespace,
+    palette, harmony, temperature, tone, textStats, sharpness, clutter, format,
+  };
 }
 
 // ============================================================
@@ -1203,6 +1820,10 @@ async function loadImage(item, file) {
   const dataUrl = offCanvas.toDataURL('image/jpeg', 0.85);
   const imageData = offCtx.getImageData(0, 0, w, h);
   const audit = runAudit(imageData, state.brandColors);
+  audit.format = computeFormat(img.naturalWidth, img.naturalHeight);
+  item.originalWidth = img.naturalWidth;
+  item.originalHeight = img.naturalHeight;
+  item.fileSize = file.size;
   item.frames = [{ t: 0, dataUrl, width: w, height: h, audit }];
   item.thumbDataUrl = await makeThumbDataUrl(offCanvas);
   URL.revokeObjectURL(url);
@@ -1225,6 +1846,10 @@ async function loadVideo(item, file) {
   const h = Math.round(video.videoHeight * scale);
   offCanvas.width = w;
   offCanvas.height = h;
+  item.originalWidth = video.videoWidth;
+  item.originalHeight = video.videoHeight;
+  item.duration = duration;
+  item.fileSize = file.size;
 
   // Need to actually decode frames — some browsers require play() before seeked fires reliably
   try { await video.play(); video.pause(); } catch (e) {}
@@ -1236,6 +1861,7 @@ async function loadVideo(item, file) {
     const dataUrl = offCanvas.toDataURL('image/jpeg', 0.8);
     const imageData = offCtx.getImageData(0, 0, w, h);
     const audit = runAudit(imageData, state.brandColors);
+    audit.format = computeFormat(video.videoWidth, video.videoHeight);
     item.frames.push({ t, dataUrl, width: w, height: h, audit });
     // Use the middle frame as thumbnail
     if (i === Math.floor(VIDEO_FRAMES / 2)) {
@@ -1392,6 +2018,24 @@ function removeItem(id) {
 // ============================================================
 let cleanImageData = null;
 
+const CVD_MATRICES = {
+  protan: [0.567, 0.433, 0, 0.558, 0.442, 0, 0, 0.242, 0.758],
+  deutan: [0.625, 0.375, 0, 0.70, 0.30, 0, 0, 0.30, 0.70],
+  tritan: [0.95, 0.05, 0, 0, 0.433, 0.567, 0, 0.475, 0.525],
+};
+function applyCvdSimulation(imageData, mode) {
+  if (!mode || mode === 'none' || !CVD_MATRICES[mode]) return imageData;
+  const m = CVD_MATRICES[mode];
+  const data = imageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i], g = data[i+1], b = data[i+2];
+    data[i] = Math.max(0, Math.min(255, m[0]*r + m[1]*g + m[2]*b));
+    data[i+1] = Math.max(0, Math.min(255, m[3]*r + m[4]*g + m[5]*b));
+    data[i+2] = Math.max(0, Math.min(255, m[6]*r + m[7]*g + m[8]*b));
+  }
+  return imageData;
+}
+
 function renderCurrentFrame() {
   const frame = currentFrame();
   if (!frame) return;
@@ -1401,9 +2045,14 @@ function renderCurrentFrame() {
     canvas.height = frame.height;
     ctx.drawImage(img, 0, 0, frame.width, frame.height);
     cleanImageData = ctx.getImageData(0, 0, frame.width, frame.height);
+    if (state.cvdSim && state.cvdSim !== 'none') {
+      const simData = new ImageData(new Uint8ClampedArray(cleanImageData.data), cleanImageData.width, cleanImageData.height);
+      applyCvdSimulation(simData, state.cvdSim);
+      ctx.putImageData(simData, 0, 0);
+    }
     drawOverlay();
     const item = currentItem();
-    itemMeta.textContent = `${item.name} · ${frame.width}×${frame.height}${item.type === 'video' ? ` · frame ${state.selectedFrameIdx + 1}/${item.frames.length} @ ${frame.t.toFixed(1)}s` : ''}`;
+    itemMeta.textContent = `${item.name} · ${frame.width}×${frame.height}${item.type === 'video' ? ` · frame ${state.selectedFrameIdx + 1}/${item.frames.length} @ ${frame.t.toFixed(1)}s` : ''}${state.cvdSim && state.cvdSim !== 'none' ? ` · ${state.cvdSim} sim` : ''}`;
   };
   img.src = frame.dataUrl;
 }
@@ -1579,6 +2228,9 @@ function renderAuditPanel() {
   const audit = frame.audit;
   renderSelectedBanner();
 
+  // Format & platform
+  renderFormat(audit.format);
+
   // Contrast — auto fill from detection
   if (audit.contrast) {
     const tHex = rgbToHex(audit.contrast.text.r, audit.contrast.text.g, audit.contrast.text.b);
@@ -1593,14 +2245,26 @@ function renderAuditPanel() {
 
   // Brand
   renderBrandResult(audit.brand);
+  renderBrandHierarchy(audit.brandHierarchy);
+
+  // Color analysis
+  renderColorAnalysis(audit);
 
   // Composition
   document.getElementById('rotScore').textContent = `${audit.composition.rot.toFixed(0)}%`;
   setMetricColor('rotScore', audit.composition.rot);
+  document.getElementById('goldenScore').textContent = `${audit.composition.golden.toFixed(0)}%`;
+  setMetricColor('goldenScore', audit.composition.golden);
   document.getElementById('hBal').textContent = `${audit.composition.hBal.toFixed(0)}%`;
   setMetricColor('hBal', audit.composition.hBal);
   document.getElementById('vBal').textContent = `${audit.composition.vBal.toFixed(0)}%`;
   setMetricColor('vBal', audit.composition.vBal);
+  const sym = audit.composition.symmetry;
+  document.getElementById('symScore').textContent = `${sym.score.toFixed(0)}% · ${sym.axis === 'horizontal' ? 'H-axis' : 'V-axis'}`;
+  setMetricColor('symScore', sym.score);
+  const hier = audit.composition.hierarchy;
+  document.getElementById('hierScore').textContent = hier.score ? `${hier.score.toFixed(0)}%` : '—';
+  if (hier.score) setMetricColor('hierScore', hier.score);
   const focalEl = document.getElementById('focalPos');
   if (audit.composition.focal) {
     focalEl.textContent = audit.composition.focal.label;
@@ -1613,19 +2277,120 @@ function renderAuditPanel() {
   const alignEl = document.getElementById('alignType');
   if (align && align.type !== 'unknown') {
     alignEl.textContent = `${align.label}${align.score ? ' · ' + align.score.toFixed(0) + '%' : ''}`;
-    if (align.type === 'mixed') {
-      alignEl.className = 'metric-val val-warn';
-    } else {
-      setMetricColor('alignType', align.score);
-    }
+    if (align.type === 'mixed') alignEl.className = 'metric-val val-warn';
+    else setMetricColor('alignType', align.score);
   } else {
-    alignEl.textContent = '—';
-    alignEl.className = 'metric-val';
+    alignEl.textContent = '—'; alignEl.className = 'metric-val';
   }
+  const safe = audit.composition.safeArea;
+  const safeEl = document.getElementById('safeArea');
+  safeEl.textContent = safe.ok ? 'OK' : `${safe.touches} edge-touches`;
+  safeEl.className = 'metric-val ' + (safe.ok ? 'val-pass' : 'val-warn');
+
+  // Typography
+  const t = audit.textStats;
+  document.getElementById('textDensity').textContent = `${t.density.toFixed(1)}%`;
+  const densCls = t.excessive ? 'val-fail' : t.density > 8 ? 'val-pass' : t.density > 2 ? 'val-warn' : '';
+  document.getElementById('textDensity').className = 'metric-val ' + densCls;
+  document.getElementById('fontTiers').textContent = t.tiers === 0 ? 'none detected' : `${t.tiers} tier${t.tiers > 1 ? 's' : ''}`;
+  document.getElementById('lineSpacing').textContent = t.blockCount >= 3 ? `${t.spacingConsistency.toFixed(0)}%` : '—';
+  if (t.blockCount >= 3) setMetricColor('lineSpacing', t.spacingConsistency);
+  const warnDiv = document.getElementById('typoWarn');
+  if (t.excessive) {
+    warnDiv.innerHTML = '<div class="warning-row">Text density above 30% — consider trimming copy or splitting into multiple frames.</div>';
+  } else {
+    warnDiv.innerHTML = '';
+  }
+
+  // Visual quality
+  const sh = audit.sharpness;
+  const sharpEl = document.getElementById('sharpVal');
+  sharpEl.textContent = sh.verdict;
+  sharpEl.className = 'metric-val ' + sh.cls;
+  const cs = audit.tone.lumRange * 100;
+  const csEl = document.getElementById('contrastSpread');
+  let csVerdict, csCls;
+  if (cs < 40) { csVerdict = 'Flat'; csCls = 'val-fail'; }
+  else if (cs < 70) { csVerdict = 'Moderate'; csCls = 'val-warn'; }
+  else { csVerdict = 'Punchy'; csCls = 'val-pass'; }
+  csEl.textContent = `${csVerdict} · ${cs.toFixed(0)}%`;
+  csEl.className = 'metric-val ' + csCls;
+  const cl = audit.clutter;
+  const clEl = document.getElementById('clutterVal');
+  clEl.textContent = `${cl.verdict} · ${cl.components}`;
+  clEl.className = 'metric-val ' + cl.cls;
 
   // Whitespace
   document.getElementById('wsVal').textContent = `${audit.whitespace.pct.toFixed(1)}%`;
   document.getElementById('wsVerdict').innerHTML = `<span class="badge ${audit.whitespace.cls}">${audit.whitespace.verdict}</span>`;
+}
+
+function renderFormat(f) {
+  if (!f) return;
+  const item = currentItem();
+  document.getElementById('fmtDims').textContent = `${f.width} × ${f.height}`;
+  let mpText = `${f.megapixels} MP`;
+  if (item && item.fileSize) {
+    const kb = item.fileSize / 1024;
+    mpText += ' · ' + (kb < 1024 ? `${kb.toFixed(0)} KB` : `${(kb/1024).toFixed(1)} MB`);
+  }
+  if (item && item.duration) {
+    mpText += ` · ${item.duration.toFixed(1)}s`;
+  }
+  document.getElementById('fmtMP').textContent = mpText;
+  document.getElementById('fmtAspect').textContent = f.aspectLabel;
+  document.getElementById('fmtAspectNum').textContent = `ratio ${f.aspectNum}`;
+  const tagsEl = document.getElementById('platformTags');
+  if (!f.platforms.length) {
+    tagsEl.innerHTML = '<span class="muted">No common platform aspect ratio matches.</span>';
+  } else {
+    tagsEl.innerHTML = f.platforms.map(p => `<span class="platform-tag match">${p}</span>`).join('');
+  }
+}
+
+function renderBrandHierarchy(h) {
+  const out = document.getElementById('brandHierarchy');
+  if (!h || !h.length) { out.innerHTML = ''; return; }
+  let html = '<div class="sub-head">Brand color breakdown</div>';
+  for (const b of h) {
+    html += `<div class="brand-bar-row" style="color:${b.hex}">
+      <div class="brand-bar-swatch" style="background:${b.hex}"></div>
+      <div class="brand-bar-track"><div class="brand-bar-fill" style="width:${Math.min(100, b.pct * 3).toFixed(1)}%"></div></div>
+      <div class="brand-bar-pct">${b.pct.toFixed(1)}%</div>
+    </div>`;
+  }
+  out.innerHTML = html;
+}
+
+function renderColorAnalysis(audit) {
+  // Palette
+  const pal = audit.palette || [];
+  const paletteRow = document.getElementById('paletteRow');
+  paletteRow.innerHTML = pal.map(c => {
+    const hex = rgbToHex(Math.round(c.r), Math.round(c.g), Math.round(c.b));
+    return `<div class="palette-swatch" style="background:${hex}" data-pct="${c.share.toFixed(0)}%" title="${hex} · ${c.share.toFixed(1)}%"></div>`;
+  }).join('');
+  if (pal.length) {
+    const topHex = rgbToHex(Math.round(pal[0].r), Math.round(pal[0].g), Math.round(pal[0].b));
+    document.getElementById('paletteInfo').innerHTML = `Dominant <b>${topHex}</b> · ${pal.length} colors detected`;
+  } else {
+    document.getElementById('paletteInfo').textContent = '—';
+  }
+
+  // Tone
+  const sat = audit.tone.saturation;
+  const bright = audit.tone.brightness;
+  document.getElementById('satVal').textContent = `${sat.toFixed(0)}%`;
+  document.getElementById('satVerdict').textContent = sat < 20 ? 'Muted' : sat < 50 ? 'Balanced' : 'Vibrant';
+  document.getElementById('brightVal').textContent = `${bright.toFixed(0)}%`;
+  document.getElementById('brightVerdict').textContent = bright < 35 ? 'Dark' : bright < 65 ? 'Balanced' : 'Bright';
+  document.getElementById('harmonyVal').textContent = audit.harmony.label;
+  document.getElementById('tempVal').textContent = audit.temperature.label;
+
+  // Histogram
+  const hist = audit.tone.histogram || [];
+  document.getElementById('histogram').innerHTML = hist.map(v => `<div class="bar" style="height:${(v * 100).toFixed(1)}%"></div>`).join('');
+  document.getElementById('histInfo').textContent = audit.tone.lumRange > 0.7 ? 'Full luminance range used.' : audit.tone.lumRange > 0.4 ? 'Moderate luminance spread.' : 'Narrow luminance — image may look flat.';
 }
 
 function renderBrandResult(brand) {
@@ -1799,6 +2564,7 @@ async function reauditAllForBrand() {
       offCtx.drawImage(img, 0, 0, f.width, f.height);
       const imgData = offCtx.getImageData(0, 0, f.width, f.height);
       f.audit.brand = computeBrand(imgData, state.brandColors);
+      f.audit.brandHierarchy = computeBrandHierarchy(imgData, state.brandColors);
     }
     if (item.type === 'video') item.avgAudit = computeAvgAudit(item.frames);
   }
@@ -1823,6 +2589,18 @@ document.getElementById('clearBtn').addEventListener('click', () => {
   state.manualPick = { text: false, bg: false, hexText: '', hexBg: '' };
   setActiveTarget('text');
   updateContrastUI();
+});
+
+// ============================================================
+// CVD SIM BUTTONS
+// ============================================================
+document.querySelectorAll('.sim-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const mode = btn.dataset.sim;
+    state.cvdSim = mode;
+    document.querySelectorAll('.sim-btn').forEach(b => b.classList.toggle('active', b === btn));
+    renderCurrentFrame();
+  });
 });
 
 // ============================================================
