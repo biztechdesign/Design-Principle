@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Image Design Audit</title>
+<title>Image & Reel Design Audit</title>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -14,7 +14,7 @@
     color: #e2e8f0;
     min-height: 100vh;
   }
-  .wrap { max-width: 1180px; margin: 0 auto; }
+  .wrap { max-width: 1280px; margin: 0 auto; }
   h1 { font-size: 24px; margin: 0 0 6px; }
   p.sub { color: #94a3b8; margin: 0 0 20px; font-size: 14px; }
   h3 { font-size: 13px; margin: 0 0 10px; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -33,13 +33,90 @@
   .upload-label { color: #cbd5e1; font-size: 14px; }
   .upload-label strong { color: #38bdf8; }
 
+  /* Queue strip */
+  .queue-strip {
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    align-items: center;
+  }
+  .queue-strip::-webkit-scrollbar { height: 8px; }
+  .queue-strip::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+  .qitem {
+    position: relative;
+    flex: 0 0 auto;
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    cursor: pointer;
+    background: #0f172a;
+  }
+  .qitem.active { border-color: #38bdf8; box-shadow: 0 0 0 2px rgba(56,189,248,.2); }
+  .qitem img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .qitem .type-tag {
+    position: absolute; top: 4px; left: 4px;
+    background: rgba(15,23,42,.85);
+    color: #e2e8f0;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+  }
+  .qitem .type-tag.vid { background: rgba(244,63,94,.85); }
+  .qitem .qclose {
+    position: absolute; top: 2px; right: 2px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: rgba(15,23,42,.85);
+    color: #fff;
+    border: none;
+    font-size: 11px;
+    cursor: pointer;
+    display: none;
+    line-height: 1;
+  }
+  .qitem:hover .qclose { display: block; }
+  .qitem .processing-overlay {
+    position: absolute; inset: 0;
+    background: rgba(15,23,42,.7);
+    display: flex; align-items: center; justify-content: center;
+    color: #38bdf8;
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .qadd {
+    flex: 0 0 auto;
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    border: 2px dashed #475569;
+    background: #0f172a;
+    color: #64748b;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px;
+  }
+  .qadd:hover { border-color: #38bdf8; color: #38bdf8; }
+  .qadd .plus { font-size: 22px; line-height: 1; }
+
+  /* Main grid */
   .grid {
     display: grid;
-    grid-template-columns: 1fr 360px;
+    grid-template-columns: 1fr 380px;
     gap: 20px;
-    margin-top: 20px;
   }
-  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
 
   .canvas-card, .panel {
     background: #1e293b;
@@ -54,6 +131,7 @@
   .canvas-toolbar {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 14px;
     margin-bottom: 10px;
     font-size: 13px;
@@ -61,6 +139,7 @@
   }
   .canvas-toolbar label { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
   .canvas-toolbar input[type="checkbox"] { accent-color: #38bdf8; }
+  .meta { font-size: 11px; color: #94a3b8; font-family: ui-monospace, Menlo, monospace; }
 
   canvas {
     width: 100%;
@@ -70,6 +149,52 @@
     cursor: crosshair;
     background: #0f172a;
   }
+
+  /* Filmstrip (for videos) */
+  .filmstrip {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .filmstrip::-webkit-scrollbar { height: 6px; }
+  .filmstrip::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+  .fitem {
+    position: relative;
+    flex: 0 0 auto;
+    width: 80px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    cursor: pointer;
+    background: #0f172a;
+  }
+  .fitem.active { border-color: #38bdf8; }
+  .fitem img { width: 100%; display: block; }
+  .fitem .ftime {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(15,23,42,.9));
+    color: #fff;
+    font-size: 9px;
+    font-weight: 600;
+    padding: 6px 4px 2px;
+    text-align: center;
+    font-family: ui-monospace, Menlo, monospace;
+  }
+  .fitem .fscore {
+    position: absolute; top: 2px; right: 2px;
+    background: rgba(15,23,42,.85);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 4px;
+    border-radius: 3px;
+  }
+  .fitem .fscore.good { background: rgba(20,83,45,.9); color: #bbf7d0; }
+  .fitem .fscore.warn { background: rgba(120,53,15,.9); color: #fde68a; }
+  .fitem .fscore.bad { background: rgba(127,29,29,.9); color: #fecaca; }
+
   .hint {
     font-size: 12px;
     color: #94a3b8;
@@ -80,6 +205,7 @@
     border-left: 3px solid #38bdf8;
   }
 
+  /* Cards */
   .card {
     background: #0f172a;
     border: 1px solid #334155;
@@ -88,6 +214,7 @@
     margin-bottom: 12px;
   }
   .card:last-child { margin-bottom: 0; }
+  .card.batch { border-color: #38bdf8; background: linear-gradient(180deg, rgba(56,189,248,0.06), #0f172a); }
 
   /* Brand colors */
   .brand-input-row { display: flex; gap: 8px; margin-bottom: 8px; }
@@ -227,7 +354,6 @@
   }
   .level-card .name { color: #94a3b8; margin-bottom: 3px; font-size: 10px; }
 
-  /* Composition + whitespace metric rows */
   .metric-row {
     display: flex; align-items: center; justify-content: space-between;
     padding: 6px 0;
@@ -250,652 +376,1042 @@
   .ws-val { font-size: 28px; font-weight: 700; text-align: center; }
   .ws-verdict { text-align: center; margin-top: 4px; }
 
-  .reset {
-    margin-top: 8px; width: 100%;
-    background: #334155; color: #e2e8f0; border: none;
-    padding: 10px; border-radius: 8px; cursor: pointer; font-size: 13px;
+  .empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: #64748b;
+    font-size: 14px;
   }
-  .reset:hover { background: #475569; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Image Design Audit</h1>
-  <p class="sub">Upload an image — auto-checks brand colors, contrast, composition, balance, focal point, and whitespace.</p>
+  <h1>Image & Reel Design Audit</h1>
+  <p class="sub">Upload images or reels — auto-checks brand colors, contrast, composition, balance, focal point, and whitespace per item (and per frame for videos).</p>
 
   <label class="upload" id="uploadBox">
-    <input type="file" id="fileInput" accept="image/*" />
+    <input type="file" id="fileInput" accept="image/*,video/*" multiple />
     <div class="upload-label">
-      <strong>Click to upload</strong> or drag & drop an image here<br>
-      <span style="font-size:12px;color:#64748b">PNG, JPG, WebP</span>
+      <strong>Click to upload</strong> or drag & drop images and reels here<br>
+      <span style="font-size:12px;color:#64748b">PNG, JPG, WebP &nbsp;·&nbsp; MP4, WebM, MOV &nbsp;·&nbsp; multiple files OK</span>
     </div>
   </label>
 
-  <div class="grid" id="workArea" style="display:none">
-    <div class="canvas-card">
-      <div class="canvas-toolbar">
-        <label><input type="checkbox" id="overlayToggle" checked> Show composition overlay</label>
-      </div>
-      <canvas id="canvas"></canvas>
-      <div class="hint" id="hint">Audit running automatically. Click <b>Text color</b> / <b>Background color</b> on the right and then click the image to override contrast picks.</div>
-    </div>
+  <div id="workArea" style="display:none">
+    <div class="queue-strip" id="queueStrip"></div>
 
-    <div class="panel">
-      <!-- Brand colors -->
-      <div class="card">
-        <h3>Brand colors</h3>
-        <div class="brand-input-row">
-          <input id="brandHex" placeholder="#0fb5b5" maxlength="7" />
-          <button id="addBrand" type="button">Add</button>
+    <div class="grid">
+      <div class="canvas-card">
+        <div class="canvas-toolbar">
+          <label><input type="checkbox" id="overlayToggle" checked> Show composition overlay</label>
+          <span class="meta" id="itemMeta"></span>
         </div>
-        <div class="chips" id="brandChips"></div>
-        <div id="brandResult"><span class="muted">Add 1–6 brand hex codes to check compliance.</span></div>
+        <canvas id="canvas"></canvas>
+        <div class="filmstrip" id="filmstrip" style="display:none"></div>
+        <div class="hint" id="hint">Audit running automatically. Click <b>Text color</b> / <b>Background color</b> on the right then click the image to override contrast picks.</div>
       </div>
 
-      <!-- Contrast -->
-      <div class="card">
-        <h3>Text / background contrast</h3>
-        <div class="toolbar">
-          <button id="autoBtn" type="button">Auto-detect</button>
-          <button id="clearBtn" type="button">Clear</button>
+      <div class="panel">
+        <div class="card batch" id="batchCard" style="display:none">
+          <h3>Batch averages</h3>
+          <div id="batchContent"></div>
         </div>
-        <div class="pickers">
-          <div class="picker active" id="pickText" data-target="text">
-            <div class="picker-head"><span>Text color</span><span class="status">Not picked</span></div>
-            <div class="swatch-row"><div class="swatch" id="swatchText"></div><input class="hexin" id="hexText" placeholder="#000000" /></div>
+
+        <div class="card">
+          <h3>Brand colors</h3>
+          <div class="brand-input-row">
+            <input id="brandHex" placeholder="#0fb5b5" maxlength="7" />
+            <button id="addBrand" type="button">Add</button>
           </div>
-          <div class="picker" id="pickBg" data-target="bg">
-            <div class="picker-head"><span>Background color</span><span class="status">Not picked</span></div>
-            <div class="swatch-row"><div class="swatch" id="swatchBg"></div><input class="hexin" id="hexBg" placeholder="#ffffff" /></div>
+          <div class="chips" id="brandChips"></div>
+          <div id="brandResult"><span class="muted">Add 1–6 brand hex codes to check compliance.</span></div>
+        </div>
+
+        <div class="card">
+          <h3>Text / background contrast</h3>
+          <div class="toolbar">
+            <button id="autoBtn" type="button">Auto-detect</button>
+            <button id="clearBtn" type="button">Clear</button>
+          </div>
+          <div class="pickers">
+            <div class="picker active" id="pickText" data-target="text">
+              <div class="picker-head"><span>Text color</span><span class="status">Not picked</span></div>
+              <div class="swatch-row"><div class="swatch" id="swatchText"></div><input class="hexin" id="hexText" placeholder="#000000" /></div>
+            </div>
+            <div class="picker" id="pickBg" data-target="bg">
+              <div class="picker-head"><span>Background color</span><span class="status">Not picked</span></div>
+              <div class="swatch-row"><div class="swatch" id="swatchBg"></div><input class="hexin" id="hexBg" placeholder="#ffffff" /></div>
+            </div>
+          </div>
+          <div class="preview" id="preview">Sample Text Aa</div>
+          <div class="result" id="resultBox">
+            <div class="ratio" id="ratio">— : 1</div>
+            <div class="ratio-sub">Contrast ratio</div>
+            <div class="pct" id="pct">Pick both colors to see the score</div>
+          </div>
+          <div class="levels" id="levelsBox">
+            <div class="level-card"><div class="name">AA · Normal</div><span class="badge pending" id="aaNormal">—</span></div>
+            <div class="level-card"><div class="name">AA · Large</div><span class="badge pending" id="aaLarge">—</span></div>
+            <div class="level-card"><div class="name">AAA · Normal</div><span class="badge pending" id="aaaNormal">—</span></div>
+            <div class="level-card"><div class="name">AAA · Large</div><span class="badge pending" id="aaaLarge">—</span></div>
           </div>
         </div>
-        <div class="preview" id="preview">Sample Text Aa</div>
-        <div class="result" id="resultBox">
-          <div class="ratio" id="ratio">— : 1</div>
-          <div class="ratio-sub">Contrast ratio</div>
-          <div class="pct" id="pct">Pick both colors to see the score</div>
+
+        <div class="card">
+          <h3>Composition</h3>
+          <div class="metric-row"><span>Rule of thirds</span><span class="metric-val" id="rotScore">—</span></div>
+          <div class="metric-row"><span>Horizontal balance</span><span class="metric-val" id="hBal">—</span></div>
+          <div class="metric-row"><span>Vertical balance</span><span class="metric-val" id="vBal">—</span></div>
+          <div class="metric-row"><span>Focal point</span><span class="metric-val" id="focalPos">—</span></div>
         </div>
-        <div class="levels" id="levelsBox">
-          <div class="level-card"><div class="name">AA · Normal</div><span class="badge pending" id="aaNormal">—</span></div>
-          <div class="level-card"><div class="name">AA · Large</div><span class="badge pending" id="aaLarge">—</span></div>
-          <div class="level-card"><div class="name">AAA · Normal</div><span class="badge pending" id="aaaNormal">—</span></div>
-          <div class="level-card"><div class="name">AAA · Large</div><span class="badge pending" id="aaaLarge">—</span></div>
+
+        <div class="card">
+          <h3>Whitespace</h3>
+          <div class="ws-val" id="wsVal">—</div>
+          <div class="ws-verdict" id="wsVerdict"><span class="badge pending">—</span></div>
         </div>
       </div>
-
-      <!-- Composition -->
-      <div class="card">
-        <h3>Composition</h3>
-        <div class="metric-row"><span>Rule of thirds</span><span class="metric-val" id="rotScore">—</span></div>
-        <div class="metric-row"><span>Horizontal balance</span><span class="metric-val" id="hBal">—</span></div>
-        <div class="metric-row"><span>Vertical balance</span><span class="metric-val" id="vBal">—</span></div>
-        <div class="metric-row"><span>Focal point</span><span class="metric-val" id="focalPos">—</span></div>
-      </div>
-
-      <!-- Whitespace -->
-      <div class="card">
-        <h3>Whitespace</h3>
-        <div class="ws-val" id="wsVal">—</div>
-        <div class="ws-verdict" id="wsVerdict"><span class="badge pending">—</span></div>
-      </div>
-
-      <button class="reset" id="resetBtn" type="button">Upload another image</button>
     </div>
   </div>
 </div>
 
+<input type="file" id="fileInputMore" accept="image/*,video/*" multiple style="display:none" />
+
 <script>
-  const fileInput = document.getElementById('fileInput');
-  const uploadBox = document.getElementById('uploadBox');
-  const workArea = document.getElementById('workArea');
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  const hint = document.getElementById('hint');
-  const resetBtn = document.getElementById('resetBtn');
-  const autoBtn = document.getElementById('autoBtn');
-  const clearBtn = document.getElementById('clearBtn');
-  const overlayToggle = document.getElementById('overlayToggle');
+'use strict';
 
-  const pickText = document.getElementById('pickText');
-  const pickBg = document.getElementById('pickBg');
-  const swatchText = document.getElementById('swatchText');
-  const swatchBg = document.getElementById('swatchBg');
-  const hexText = document.getElementById('hexText');
-  const hexBg = document.getElementById('hexBg');
-  const preview = document.getElementById('preview');
-  const ratioEl = document.getElementById('ratio');
-  const pctEl = document.getElementById('pct');
-  const resultBox = document.getElementById('resultBox');
-  const levelsBox = document.getElementById('levelsBox');
+// ============================================================
+// CONSTANTS
+// ============================================================
+const MAX_ITEMS = 25;
+const MAX_VIDEOS = 5;
+const VIDEO_FRAMES = 12;
+const GRID_W = 36, GRID_H = 24;
+const CANVAS_MAX_W = 900;
 
-  // State
-  let img = null;
-  let cleanImageData = null;
-  let weightMap = null;
-  const GRID_W = 36, GRID_H = 24;
-  let focalBox = null;
-  let detectedBgColor = null;
-  let brandColors = [];
-  try { brandColors = JSON.parse(localStorage.getItem('brandColors') || '[]'); } catch (e) {}
-  let activeTarget = 'text';
-  let picked = { text: false, bg: false };
-  let showOverlay = true;
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  items: [],
+  selectedItemId: null,
+  selectedFrameIdx: 0,
+  brandColors: [],
+  showOverlay: true,
+  activeTarget: 'text',
+  manualPick: { text: false, bg: false, hexText: '', hexBg: '' },
+};
+try { state.brandColors = JSON.parse(localStorage.getItem('brandColors') || '[]'); } catch (e) {}
 
-  // ---------- Color helpers ----------
-  function rgbToHex(r, g, b) {
-    return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+// ============================================================
+// DOM
+// ============================================================
+const fileInput = document.getElementById('fileInput');
+const fileInputMore = document.getElementById('fileInputMore');
+const uploadBox = document.getElementById('uploadBox');
+const workArea = document.getElementById('workArea');
+const queueStrip = document.getElementById('queueStrip');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
+const filmstrip = document.getElementById('filmstrip');
+const itemMeta = document.getElementById('itemMeta');
+const overlayToggle = document.getElementById('overlayToggle');
+const batchCard = document.getElementById('batchCard');
+const batchContent = document.getElementById('batchContent');
+
+const pickText = document.getElementById('pickText');
+const pickBg = document.getElementById('pickBg');
+const swatchText = document.getElementById('swatchText');
+const swatchBg = document.getElementById('swatchBg');
+const hexText = document.getElementById('hexText');
+const hexBg = document.getElementById('hexBg');
+const preview = document.getElementById('preview');
+const ratioEl = document.getElementById('ratio');
+const pctEl = document.getElementById('pct');
+const resultBox = document.getElementById('resultBox');
+const levelsBox = document.getElementById('levelsBox');
+
+// Offscreen working canvas for extraction
+const offCanvas = document.createElement('canvas');
+const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+
+// ============================================================
+// COLOR HELPERS
+// ============================================================
+function rgbToHex(r, g, b) {
+  return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+}
+function hexToRgb(hex) {
+  if (!hex) return null;
+  let h = hex.replace('#', '').trim();
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
+  return { r: parseInt(h.substr(0, 2), 16), g: parseInt(h.substr(2, 2), 16), b: parseInt(h.substr(4, 2), 16) };
+}
+function hsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  let h = 0, s = 0;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) h = ((g - b) / d + (g < b ? 6 : 0));
+    else if (max === g) h = ((b - r) / d + 2);
+    else h = ((r - g) / d + 4);
+    h /= 6;
   }
-  function hexToRgb(hex) {
-    if (!hex) return null;
-    let h = hex.replace('#','').trim();
-    if (h.length === 3) h = h.split('').map(c => c+c).join('');
-    if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
-    return { r: parseInt(h.substr(0,2),16), g: parseInt(h.substr(2,2),16), b: parseInt(h.substr(4,2),16) };
+  return { h, s, l };
+}
+function relLum({ r, g, b }) {
+  const f = v => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4); };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+}
+function contrast(c1, c2) {
+  const L1 = relLum(c1), L2 = relLum(c2);
+  const [a, b] = L1 > L2 ? [L1, L2] : [L2, L1];
+  return (a + 0.05) / (b + 0.05);
+}
+function deltaE_approx(a, b) {
+  const rmean = (a.r + b.r) / 2;
+  const dr = a.r - b.r, dg = a.g - b.g, db = a.b - b.b;
+  return Math.sqrt((2 + rmean / 256) * dr * dr + 4 * dg * dg + (2 + (255 - rmean) / 256) * db * db);
+}
+
+// ============================================================
+// AUDIT — pure functions over ImageData
+// ============================================================
+function detectBgAndContrast(imgData) {
+  const { data, width: w, height: h } = imgData;
+  const step = Math.max(1, Math.floor((w * h) / 30000));
+  const buckets = new Map();
+  for (let i = 0; i < data.length; i += 4 * step) {
+    const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+    if (a < 200) continue;
+    const key = (r >> 4) << 8 | (g >> 4) << 4 | (b >> 4);
+    const ent = buckets.get(key);
+    if (ent) { ent.r += r; ent.g += g; ent.b += b; ent.n++; }
+    else buckets.set(key, { r, g, b, n: 1 });
   }
-  function hsl(r, g, b) {
-    r /= 255; g /= 255; b /= 255;
-    const max = Math.max(r,g,b), min = Math.min(r,g,b);
-    const l = (max + min) / 2;
-    let h = 0, s = 0;
-    if (max !== min) {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      if (max === r) h = ((g - b) / d + (g < b ? 6 : 0));
-      else if (max === g) h = ((b - r) / d + 2);
-      else h = ((r - g) / d + 4);
-      h /= 6;
+  const top = [...buckets.values()]
+    .map(e => ({ r: e.r / e.n, g: e.g / e.n, b: e.b / e.n, n: e.n }))
+    .sort((a, b) => b.n - a.n)
+    .slice(0, 12);
+  if (top.length < 2) return null;
+  const bg = top[0];
+  const bgRgb = { r: Math.round(bg.r), g: Math.round(bg.g), b: Math.round(bg.b) };
+  let best = null, bestScore = 0;
+  for (let i = 1; i < top.length; i++) {
+    const c = top[i];
+    const cr = contrast({ r: Math.round(c.r), g: Math.round(c.g), b: Math.round(c.b) }, bgRgb);
+    const score = cr * Math.log(c.n + 1);
+    if (score > bestScore) { bestScore = score; best = c; }
+  }
+  if (!best) return null;
+  const textRgb = { r: Math.round(best.r), g: Math.round(best.g), b: Math.round(best.b) };
+  return { bg: bgRgb, text: textRgb, ratio: contrast(textRgb, bgRgb) };
+}
+
+function computeBrand(imgData, brandColors) {
+  if (!brandColors.length) return null;
+  const brands = brandColors.map(hexToRgb).filter(Boolean);
+  if (!brands.length) return null;
+  const { data, width: W, height: H } = imgData;
+  let total = 0, onBrand = 0;
+  const offBuckets = new Map();
+  const step = Math.max(1, Math.floor((W * H) / 25000)) * 4;
+  for (let i = 0; i < data.length; i += step) {
+    const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+    if (a < 200) continue;
+    total++;
+    let minE = Infinity;
+    for (const bc of brands) {
+      const e = deltaE_approx({ r, g, b }, bc);
+      if (e < minE) minE = e;
     }
-    return { h, s, l };
+    if (minE <= 25) onBrand++;
+    else {
+      const key = (r >> 4) << 8 | (g >> 4) << 4 | (b >> 4);
+      const ent = offBuckets.get(key);
+      if (ent) { ent.r += r; ent.g += g; ent.b += b; ent.n++; }
+      else offBuckets.set(key, { r, g, b, n: 1 });
+    }
   }
-  function relLum({r,g,b}) {
-    const f = v => { const s = v/255; return s <= 0.03928 ? s/12.92 : Math.pow((s+0.055)/1.055, 2.4); };
-    return 0.2126*f(r) + 0.7152*f(g) + 0.0722*f(b);
-  }
-  function contrast(c1, c2) {
-    const L1 = relLum(c1), L2 = relLum(c2);
-    const [a,b] = L1 > L2 ? [L1,L2] : [L2,L1];
-    return (a + 0.05) / (b + 0.05);
-  }
-  function deltaE_approx(a, b) {
-    const rmean = (a.r + b.r) / 2;
-    const dr = a.r - b.r, dg = a.g - b.g, db = a.b - b.b;
-    return Math.sqrt((2 + rmean/256) * dr*dr + 4 * dg*dg + (2 + (255 - rmean)/256) * db*db);
-  }
+  const pct = total ? (onBrand / total) * 100 : 0;
+  const off = [...offBuckets.values()]
+    .map(e => ({ r: e.r / e.n, g: e.g / e.n, b: e.b / e.n, share: (e.n / total) * 100 }))
+    .sort((a, b) => b.share - a.share)
+    .slice(0, 5);
+  return { pct, off };
+}
 
-  // ---------- File loading ----------
-  ['dragover','dragenter'].forEach(ev => uploadBox.addEventListener(ev, e => {
-    e.preventDefault(); uploadBox.style.borderColor = '#38bdf8';
-  }));
-  ['dragleave','drop'].forEach(ev => uploadBox.addEventListener(ev, e => {
-    e.preventDefault(); uploadBox.style.borderColor = '';
-  }));
-  uploadBox.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) loadFile(f); });
-  fileInput.addEventListener('change', e => { const f = e.target.files[0]; if (f) loadFile(f); });
+function computeWeightMap(imgData, gw, gh) {
+  const { data, width: W, height: H } = imgData;
+  const cellW = W / gw, cellH = H / gh;
+  const map = new Float32Array(gw * gh);
+  const lightMap = new Float32Array(gw * gh);
+  const counts = new Float32Array(gw * gh);
+  const step = Math.max(1, Math.floor(Math.sqrt((W * H) / 60000)));
+  for (let y = 0; y < H; y += step) {
+    const gy = Math.min(gh - 1, Math.floor(y / cellH));
+    for (let x = 0; x < W; x += step) {
+      const gx = Math.min(gw - 1, Math.floor(x / cellW));
+      const i = (y * W + x) * 4;
+      const { s, l } = hsl(data[i], data[i + 1], data[i + 2]);
+      const idx = gy * gw + gx;
+      map[idx] += (1 - l) * 0.5 + s * 0.3;
+      lightMap[idx] += l;
+      counts[idx]++;
+    }
+  }
+  for (let i = 0; i < map.length; i++) if (counts[i]) { map[i] /= counts[i]; lightMap[i] /= counts[i]; }
+  for (let gy = 0; gy < gh; gy++) {
+    for (let gx = 0; gx < gw; gx++) {
+      const idx = gy * gw + gx;
+      const L = gx > 0 ? lightMap[idx - 1] : lightMap[idx];
+      const R = gx < gw - 1 ? lightMap[idx + 1] : lightMap[idx];
+      const T = gy > 0 ? lightMap[idx - gw] : lightMap[idx];
+      const B = gy < gh - 1 ? lightMap[idx + gw] : lightMap[idx];
+      map[idx] += Math.sqrt((R - L) ** 2 + (B - T) ** 2) * 0.2;
+    }
+  }
+  return map;
+}
 
-  function loadFile(file) {
-    const url = URL.createObjectURL(file);
-    const i = new Image();
-    i.onload = () => {
-      img = i;
-      drawImage();
-      uploadBox.style.display = 'none';
-      workArea.style.display = 'grid';
-      setTimeout(runAllChecks, 50);
+function computeComposition(weightMap) {
+  const sortedDesc = Array.from(weightMap).sort((a, b) => b - a);
+  const topThresh = sortedDesc[Math.floor(sortedDesc.length * 0.1)] || 0;
+  let sumW = 0, cx = 0, cy = 0;
+  for (let gy = 0; gy < GRID_H; gy++) {
+    for (let gx = 0; gx < GRID_W; gx++) {
+      const v = weightMap[gy * GRID_W + gx];
+      if (v >= topThresh) { sumW += v; cx += (gx + 0.5) * v; cy += (gy + 0.5) * v; }
+    }
+  }
+  cx /= sumW || 1; cy /= sumW || 1;
+  const ncx = cx / GRID_W, ncy = cy / GRID_H;
+  const pp = [[1 / 3, 1 / 3], [2 / 3, 1 / 3], [1 / 3, 2 / 3], [2 / 3, 2 / 3]];
+  let minDist = Infinity;
+  for (const [px, py] of pp) {
+    const d = Math.hypot(ncx - px, ncy - py);
+    if (d < minDist) minDist = d;
+  }
+  const maxD = Math.SQRT2 / 3;
+  const rot = Math.max(0, Math.min(1, 1 - minDist / maxD)) * 100;
+
+  let q = [0, 0, 0, 0];
+  for (let gy = 0; gy < GRID_H; gy++) {
+    for (let gx = 0; gx < GRID_W; gx++) {
+      const v = weightMap[gy * GRID_W + gx];
+      const qi = (gy < GRID_H / 2 ? 0 : 2) + (gx < GRID_W / 2 ? 0 : 1);
+      q[qi] += v;
+    }
+  }
+  const total = q[0] + q[1] + q[2] + q[3] || 1;
+  const left = q[0] + q[2], right = q[1] + q[3];
+  const top = q[0] + q[1], bot = q[2] + q[3];
+  const hBal = (1 - Math.abs(left - right) / total) * 100;
+  const vBal = (1 - Math.abs(top - bot) / total) * 100;
+
+  const focThresh = sortedDesc[Math.floor(sortedDesc.length * 0.15)] || topThresh;
+  const visited = new Uint8Array(GRID_W * GRID_H);
+  let bestRegion = null;
+  for (let gy = 0; gy < GRID_H; gy++) {
+    for (let gx = 0; gx < GRID_W; gx++) {
+      const idx = gy * GRID_W + gx;
+      if (visited[idx] || weightMap[idx] < focThresh) continue;
+      const stack = [[gx, gy]];
+      let minX = gx, maxX = gx, minY = gy, maxY = gy, size = 0;
+      while (stack.length) {
+        const [x, y] = stack.pop();
+        if (x < 0 || y < 0 || x >= GRID_W || y >= GRID_H) continue;
+        const k = y * GRID_W + x;
+        if (visited[k] || weightMap[k] < focThresh) continue;
+        visited[k] = 1; size++;
+        if (x < minX) minX = x; if (x > maxX) maxX = x;
+        if (y < minY) minY = y; if (y > maxY) maxY = y;
+        stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+      }
+      if (!bestRegion || size > bestRegion.size) bestRegion = { minX, maxX, minY, maxY, size };
+    }
+  }
+  let focal = null;
+  if (bestRegion) {
+    const fx = ((bestRegion.minX + bestRegion.maxX) / 2 + 0.5) / GRID_W;
+    const fy = ((bestRegion.minY + bestRegion.maxY) / 2 + 0.5) / GRID_H;
+    const xLabel = fx < 0.33 ? 'left' : fx > 0.66 ? 'right' : 'center';
+    const yLabel = fy < 0.33 ? 'top' : fy > 0.66 ? 'bottom' : 'middle';
+    focal = { box: bestRegion, label: `${yLabel}-${xLabel}` };
+  }
+  return { rot, hBal, vBal, focal };
+}
+
+function computeWhitespace(imgData, bg) {
+  const { data } = imgData;
+  let total = 0, ws = 0;
+  const step = 4 * 4;
+  for (let i = 0; i < data.length; i += step) {
+    const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+    if (a < 200) continue;
+    total++;
+    const { s, l } = hsl(r, g, b);
+    const isLight = l > 0.9 && s < 0.1;
+    const isBg = bg && deltaE_approx({ r, g, b }, bg) <= 15;
+    if (isLight || isBg) ws++;
+  }
+  const pct = total ? (ws / total) * 100 : 0;
+  let verdict, cls;
+  if (pct < 10) { verdict = 'Cluttered'; cls = 'fail'; }
+  else if (pct < 25) { verdict = 'Balanced'; cls = 'pass'; }
+  else if (pct < 50) { verdict = 'Breathable'; cls = 'pass'; }
+  else { verdict = 'Sparse / under-filled'; cls = 'pending'; }
+  return { pct, verdict, cls };
+}
+
+function runAudit(imgData, brandColors) {
+  const contrastRes = detectBgAndContrast(imgData);
+  const brand = computeBrand(imgData, brandColors);
+  const weightMap = computeWeightMap(imgData, GRID_W, GRID_H);
+  const composition = computeComposition(weightMap);
+  const whitespace = computeWhitespace(imgData, contrastRes ? contrastRes.bg : null);
+  return { contrast: contrastRes, brand, composition, whitespace };
+}
+
+// ============================================================
+// FILE LOADING
+// ============================================================
+['dragover', 'dragenter'].forEach(ev => uploadBox.addEventListener(ev, e => {
+  e.preventDefault(); uploadBox.style.borderColor = '#38bdf8';
+}));
+['dragleave', 'drop'].forEach(ev => uploadBox.addEventListener(ev, e => {
+  e.preventDefault(); uploadBox.style.borderColor = '';
+}));
+uploadBox.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+fileInputMore.addEventListener('change', e => { handleFiles(e.target.files); fileInputMore.value = ''; });
+
+let itemIdCounter = 0;
+
+async function handleFiles(fileList) {
+  const files = Array.from(fileList);
+  if (!files.length) return;
+  const videoCount = state.items.filter(i => i.type === 'video').length;
+  let newVideos = 0;
+  for (const f of files) {
+    if (state.items.length >= MAX_ITEMS) {
+      alert(`Maximum ${MAX_ITEMS} items. Remove some before adding more.`);
+      break;
+    }
+    const isVideo = f.type.startsWith('video/');
+    if (isVideo && videoCount + newVideos >= MAX_VIDEOS) {
+      alert(`Maximum ${MAX_VIDEOS} videos. Skipping ${f.name}.`);
+      continue;
+    }
+    if (isVideo) newVideos++;
+    const id = String(++itemIdCounter);
+    const item = {
+      id, name: f.name,
+      type: isVideo ? 'video' : 'image',
+      thumbDataUrl: null,
+      frames: [],
+      avgAudit: null,
+      processing: true,
     };
-    i.src = url;
-  }
-  function drawImage() {
-    const maxW = 900;
-    const scale = Math.min(1, maxW / img.naturalWidth);
-    canvas.width = Math.round(img.naturalWidth * scale);
-    canvas.height = Math.round(img.naturalHeight * scale);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  }
-  function redraw() {
-    if (!img) return;
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    if (showOverlay) drawOverlay();
-  }
-
-  // ---------- Canvas click eyedropper ----------
-  canvas.addEventListener('click', e => {
-    if (!cleanImageData) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = Math.floor((e.clientX - rect.left) * (canvas.width / rect.width));
-    const y = Math.floor((e.clientY - rect.top) * (canvas.height / rect.height));
-    // Read from cleanImageData so overlay drawing doesn't contaminate sampling
-    let r=0,g=0,bb=0,n=0;
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        const px = Math.min(canvas.width - 1, Math.max(0, x + dx));
-        const py = Math.min(canvas.height - 1, Math.max(0, y + dy));
-        const i = (py * canvas.width + px) * 4;
-        r += cleanImageData.data[i];
-        g += cleanImageData.data[i+1];
-        bb += cleanImageData.data[i+2];
-        n++;
-      }
+    state.items.push(item);
+    renderQueue();
+    workArea.style.display = 'block';
+    uploadBox.style.display = 'none';
+    try {
+      if (isVideo) await loadVideo(item, f);
+      else await loadImage(item, f);
+    } catch (err) {
+      console.error('Failed to load', f.name, err);
+      state.items = state.items.filter(i => i.id !== id);
+      renderQueue();
+      continue;
     }
-    const hex = rgbToHex(Math.round(r/n), Math.round(g/n), Math.round(bb/n));
-    if (activeTarget === 'text') { hexText.value = hex; picked.text = true; setActive('bg'); }
-    else { hexBg.value = hex; picked.bg = true; }
-    updateContrast();
+    item.processing = false;
+    renderQueue();
+    if (!state.selectedItemId) selectItem(id);
+    renderBatchSummary();
+  }
+}
+
+function fileToDataUrl(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
   });
+}
 
-  // ---------- Contrast pickers ----------
-  function setActive(target) {
-    activeTarget = target;
-    pickText.classList.toggle('active', target === 'text');
-    pickBg.classList.toggle('active', target === 'bg');
-  }
-  pickText.addEventListener('click', () => setActive('text'));
-  pickBg.addEventListener('click', () => setActive('bg'));
-  [hexText, hexBg].forEach(inp => inp.addEventListener('input', () => {
-    if (inp === hexText && hexToRgb(inp.value)) picked.text = true;
-    if (inp === hexBg && hexToRgb(inp.value)) picked.bg = true;
-    updateContrast();
-  }));
+async function loadImage(item, file) {
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+  const scale = Math.min(1, CANVAS_MAX_W / img.naturalWidth);
+  const w = Math.round(img.naturalWidth * scale);
+  const h = Math.round(img.naturalHeight * scale);
+  offCanvas.width = w;
+  offCanvas.height = h;
+  offCtx.drawImage(img, 0, 0, w, h);
+  const dataUrl = offCanvas.toDataURL('image/jpeg', 0.85);
+  const imageData = offCtx.getImageData(0, 0, w, h);
+  const audit = runAudit(imageData, state.brandColors);
+  item.frames = [{ t: 0, dataUrl, width: w, height: h, audit }];
+  item.thumbDataUrl = await makeThumbDataUrl(offCanvas);
+  URL.revokeObjectURL(url);
+}
 
-  function setStatus(el, isPicked) {
-    el.classList.toggle('picked', isPicked);
-    el.querySelector('.status').textContent = isPicked ? 'Picked' : 'Not picked';
-  }
-
-  function updateContrast() {
-    setStatus(pickText, picked.text);
-    setStatus(pickBg, picked.bg);
-    const t = hexToRgb(hexText.value);
-    const b = hexToRgb(hexBg.value);
-    swatchText.style.background = t ? hexText.value : '';
-    swatchBg.style.background = b ? hexBg.value : '';
-    if (t && b && picked.text && picked.bg) {
-      preview.style.color = hexText.value;
-      preview.style.background = hexBg.value;
-    } else {
-      preview.style.color = '#475569';
-      preview.style.background = '#1e293b';
-    }
-    if (!t || !b || !picked.text || !picked.bg) {
-      ratioEl.textContent = '— : 1';
-      pctEl.textContent = 'Pick both colors to see the score';
-      resultBox.classList.remove('ready');
-      levelsBox.classList.remove('ready');
-      ['aaNormal','aaLarge','aaaNormal','aaaLarge'].forEach(id => {
-        const el = document.getElementById(id);
-        el.textContent = '—'; el.className = 'badge pending';
-      });
-      return;
-    }
-    resultBox.classList.add('ready');
-    levelsBox.classList.add('ready');
-    const cr = contrast(t, b);
-    ratioEl.textContent = cr.toFixed(2) + ' : 1';
-    const pct = Math.max(0, Math.min(100, ((cr - 1) / 20) * 100));
-    let verdict;
-    if (cr >= 7) verdict = 'Excellent';
-    else if (cr >= 4.5) verdict = 'Good';
-    else if (cr >= 3) verdict = 'Fair (large text only)';
-    else verdict = 'Poor — hard to read';
-    pctEl.innerHTML = `Score: <b>${pct.toFixed(1)}%</b> · ${verdict}`;
-    setBadge('aaNormal', cr >= 4.5);
-    setBadge('aaLarge', cr >= 3);
-    setBadge('aaaNormal', cr >= 7);
-    setBadge('aaaLarge', cr >= 4.5);
-  }
-  function setBadge(id, ok) {
-    const el = document.getElementById(id);
-    el.textContent = ok ? 'Pass' : 'Fail';
-    el.className = 'badge ' + (ok ? 'pass' : 'fail');
-  }
-
-  // ---------- Auto-detect dominant + best-contrast pair ----------
-  function autoDetect() {
-    if (!cleanImageData) return;
-    const { data, width: w, height: h } = cleanImageData;
-    const step = Math.max(1, Math.floor((w*h) / 30000));
-    const buckets = new Map();
-    for (let i = 0; i < data.length; i += 4 * step) {
-      const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
-      if (a < 200) continue;
-      const key = (r>>4)<<8 | (g>>4)<<4 | (b>>4);
-      const ent = buckets.get(key);
-      if (ent) { ent.r+=r; ent.g+=g; ent.b+=b; ent.n++; }
-      else buckets.set(key, {r,g,b,n:1});
-    }
-    const top = [...buckets.values()]
-      .map(e => ({ r: e.r/e.n, g: e.g/e.n, b: e.b/e.n, n: e.n }))
-      .sort((a,b) => b.n - a.n)
-      .slice(0, 12);
-    if (top.length < 2) return;
-    const bg = top[0];
-    detectedBgColor = { r: Math.round(bg.r), g: Math.round(bg.g), b: Math.round(bg.b) };
-    let best = null, bestScore = 0;
-    for (let i = 1; i < top.length; i++) {
-      const c = top[i];
-      const cr = contrast(
-        {r:Math.round(c.r),g:Math.round(c.g),b:Math.round(c.b)},
-        detectedBgColor
-      );
-      const score = cr * Math.log(c.n + 1);
-      if (score > bestScore) { bestScore = score; best = c; }
-    }
-    if (!best) return;
-    hexBg.value = rgbToHex(detectedBgColor.r, detectedBgColor.g, detectedBgColor.b);
-    hexText.value = rgbToHex(Math.round(best.r), Math.round(best.g), Math.round(best.b));
-    picked.text = true; picked.bg = true;
-    updateContrast();
-  }
-  autoBtn.addEventListener('click', autoDetect);
-  clearBtn.addEventListener('click', () => {
-    hexText.value = ''; hexBg.value = '';
-    picked = { text: false, bg: false };
-    setActive('text');
-    updateContrast();
+async function loadVideo(item, file) {
+  const url = URL.createObjectURL(file);
+  const video = document.createElement('video');
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = 'auto';
+  video.src = url;
+  await new Promise((res, rej) => {
+    video.addEventListener('loadedmetadata', res, { once: true });
+    video.addEventListener('error', rej, { once: true });
   });
+  const duration = video.duration;
+  const scale = Math.min(1, CANVAS_MAX_W / video.videoWidth);
+  const w = Math.round(video.videoWidth * scale);
+  const h = Math.round(video.videoHeight * scale);
+  offCanvas.width = w;
+  offCanvas.height = h;
 
-  // ---------- Weight map (powers composition checks) ----------
-  function computeWeightMap(imgData, gw, gh) {
-    const { data, width: W, height: H } = imgData;
-    const cellW = W / gw, cellH = H / gh;
-    const map = new Float32Array(gw * gh);
-    const lightMap = new Float32Array(gw * gh);
-    const counts = new Float32Array(gw * gh);
-    const step = Math.max(1, Math.floor(Math.sqrt((W * H) / 60000)));
-    for (let y = 0; y < H; y += step) {
-      const gy = Math.min(gh - 1, Math.floor(y / cellH));
-      for (let x = 0; x < W; x += step) {
-        const gx = Math.min(gw - 1, Math.floor(x / cellW));
-        const i = (y * W + x) * 4;
-        const r = data[i], g = data[i+1], b = data[i+2];
-        const { s, l } = hsl(r, g, b);
-        const idx = gy * gw + gx;
-        map[idx] += (1 - l) * 0.5 + s * 0.3;
-        lightMap[idx] += l;
-        counts[idx] += 1;
-      }
+  // Need to actually decode frames — some browsers require play() before seeked fires reliably
+  try { await video.play(); video.pause(); } catch (e) {}
+
+  for (let i = 0; i < VIDEO_FRAMES; i++) {
+    const t = (duration / VIDEO_FRAMES) * (i + 0.5);
+    await seekVideo(video, Math.min(duration - 0.01, t));
+    offCtx.drawImage(video, 0, 0, w, h);
+    const dataUrl = offCanvas.toDataURL('image/jpeg', 0.8);
+    const imageData = offCtx.getImageData(0, 0, w, h);
+    const audit = runAudit(imageData, state.brandColors);
+    item.frames.push({ t, dataUrl, width: w, height: h, audit });
+    // Use the middle frame as thumbnail
+    if (i === Math.floor(VIDEO_FRAMES / 2)) {
+      item.thumbDataUrl = await makeThumbDataUrl(offCanvas);
     }
-    for (let i = 0; i < map.length; i++) {
-      if (counts[i] > 0) { map[i] /= counts[i]; lightMap[i] /= counts[i]; }
-    }
-    for (let gy = 0; gy < gh; gy++) {
-      for (let gx = 0; gx < gw; gx++) {
-        const idx = gy * gw + gx;
-        const L = gx > 0 ? lightMap[idx-1] : lightMap[idx];
-        const R = gx < gw-1 ? lightMap[idx+1] : lightMap[idx];
-        const T = gy > 0 ? lightMap[idx-gw] : lightMap[idx];
-        const B = gy < gh-1 ? lightMap[idx+gw] : lightMap[idx];
-        map[idx] += Math.sqrt((R-L)*(R-L) + (B-T)*(B-T)) * 0.2;
-      }
-    }
-    return map;
+    // Live update queue
+    renderQueue();
   }
+  item.avgAudit = computeAvgAudit(item.frames);
+  URL.revokeObjectURL(url);
+}
 
-  function setMetricColor(id, pct) {
-    const el = document.getElementById(id);
-    el.classList.remove('val-pass','val-warn','val-fail');
-    if (pct >= 80) el.classList.add('val-pass');
-    else if (pct >= 60) el.classList.add('val-warn');
-    else el.classList.add('val-fail');
+function seekVideo(video, t) {
+  return new Promise(res => {
+    const handler = () => { video.removeEventListener('seeked', handler); res(); };
+    video.addEventListener('seeked', handler);
+    video.currentTime = t;
+  });
+}
+
+async function makeThumbDataUrl(srcCanvas) {
+  const c = document.createElement('canvas');
+  const aspect = srcCanvas.height / srcCanvas.width;
+  c.width = 160;
+  c.height = Math.round(160 * aspect);
+  c.getContext('2d').drawImage(srcCanvas, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', 0.7);
+}
+
+function computeAvgAudit(frames) {
+  if (!frames.length) return null;
+  let rot = 0, hBal = 0, vBal = 0, ws = 0, ratio = 0, brandPct = 0;
+  let brandCount = 0, ratioCount = 0;
+  for (const f of frames) {
+    rot += f.audit.composition.rot;
+    hBal += f.audit.composition.hBal;
+    vBal += f.audit.composition.vBal;
+    ws += f.audit.whitespace.pct;
+    if (f.audit.contrast) { ratio += f.audit.contrast.ratio; ratioCount++; }
+    if (f.audit.brand) { brandPct += f.audit.brand.pct; brandCount++; }
   }
+  return {
+    rot: rot / frames.length,
+    hBal: hBal / frames.length,
+    vBal: vBal / frames.length,
+    ws: ws / frames.length,
+    ratio: ratioCount ? ratio / ratioCount : null,
+    brandPct: brandCount ? brandPct / brandCount : null,
+  };
+}
 
-  // ---------- Composition: rule of thirds + balance + focal point ----------
-  function checkComposition() {
-    weightMap = computeWeightMap(cleanImageData, GRID_W, GRID_H);
-
-    // Rule of thirds — centroid of top 10% cells
-    const sortedDesc = Array.from(weightMap).sort((a,b) => b - a);
-    const topThresh = sortedDesc[Math.floor(sortedDesc.length * 0.1)] || 0;
-    let sumW = 0, cx = 0, cy = 0;
-    for (let gy = 0; gy < GRID_H; gy++) {
-      for (let gx = 0; gx < GRID_W; gx++) {
-        const v = weightMap[gy * GRID_W + gx];
-        if (v >= topThresh) { sumW += v; cx += (gx + 0.5) * v; cy += (gy + 0.5) * v; }
-      }
-    }
-    cx /= sumW || 1; cy /= sumW || 1;
-    const ncx = cx / GRID_W, ncy = cy / GRID_H;
-    const pp = [[1/3,1/3],[2/3,1/3],[1/3,2/3],[2/3,2/3]];
-    let minDist = Infinity;
-    for (const [px, py] of pp) {
-      const d = Math.hypot(ncx - px, ncy - py);
-      if (d < minDist) minDist = d;
-    }
-    const maxD = Math.SQRT2 / 3;
-    const rotScore = Math.max(0, Math.min(1, 1 - minDist / maxD)) * 100;
-    document.getElementById('rotScore').textContent = `${rotScore.toFixed(0)}%`;
-    setMetricColor('rotScore', rotScore);
-
-    // Balance — quadrant weights
-    let q = [0,0,0,0];
-    for (let gy = 0; gy < GRID_H; gy++) {
-      for (let gx = 0; gx < GRID_W; gx++) {
-        const v = weightMap[gy * GRID_W + gx];
-        const qi = (gy < GRID_H/2 ? 0 : 2) + (gx < GRID_W/2 ? 0 : 1);
-        q[qi] += v;
-      }
-    }
-    const total = q[0]+q[1]+q[2]+q[3] || 1;
-    const left = q[0]+q[2], right = q[1]+q[3];
-    const top = q[0]+q[1], bot = q[2]+q[3];
-    const hBal = (1 - Math.abs(left - right) / total) * 100;
-    const vBal = (1 - Math.abs(top - bot) / total) * 100;
-    document.getElementById('hBal').textContent = `${hBal.toFixed(0)}%`;
-    document.getElementById('vBal').textContent = `${vBal.toFixed(0)}%`;
-    setMetricColor('hBal', hBal);
-    setMetricColor('vBal', vBal);
-
-    // Focal point — largest connected component at 85th percentile
-    const focThresh = sortedDesc[Math.floor(sortedDesc.length * 0.15)] || topThresh;
-    const visited = new Uint8Array(GRID_W * GRID_H);
-    let bestRegion = null;
-    for (let gy = 0; gy < GRID_H; gy++) {
-      for (let gx = 0; gx < GRID_W; gx++) {
-        const idx = gy * GRID_W + gx;
-        if (visited[idx] || weightMap[idx] < focThresh) continue;
-        const stack = [[gx, gy]];
-        let minX = gx, maxX = gx, minY = gy, maxY = gy, size = 0;
-        while (stack.length) {
-          const [x, y] = stack.pop();
-          if (x < 0 || y < 0 || x >= GRID_W || y >= GRID_H) continue;
-          const k = y * GRID_W + x;
-          if (visited[k] || weightMap[k] < focThresh) continue;
-          visited[k] = 1; size++;
-          if (x < minX) minX = x; if (x > maxX) maxX = x;
-          if (y < minY) minY = y; if (y > maxY) maxY = y;
-          stack.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]);
-        }
-        if (!bestRegion || size > bestRegion.size) bestRegion = { minX, maxX, minY, maxY, size };
-      }
-    }
-    focalBox = bestRegion;
-    if (bestRegion) {
-      const fx = ((bestRegion.minX + bestRegion.maxX) / 2 + 0.5) / GRID_W;
-      const fy = ((bestRegion.minY + bestRegion.maxY) / 2 + 0.5) / GRID_H;
-      const xLabel = fx < 0.33 ? 'left' : fx > 0.66 ? 'right' : 'center';
-      const yLabel = fy < 0.33 ? 'top' : fy > 0.66 ? 'bottom' : 'middle';
-      document.getElementById('focalPos').textContent = `${yLabel}-${xLabel}`;
-      document.getElementById('focalPos').className = 'metric-val val-pass';
-    } else {
-      document.getElementById('focalPos').textContent = 'none';
-      document.getElementById('focalPos').className = 'metric-val';
-    }
-
-    redraw();
-  }
-
-  // ---------- Overlay drawing ----------
-  function drawOverlay() {
-    const W = canvas.width, H = canvas.height;
-    ctx.save();
-    // Thirds grid
-    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-    ctx.lineWidth = 1;
-    ctx.shadowColor = 'rgba(0,0,0,0.5)';
-    ctx.shadowBlur = 2;
-    for (let i = 1; i <= 2; i++) {
-      ctx.beginPath(); ctx.moveTo((W*i)/3, 0); ctx.lineTo((W*i)/3, H); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(0, (H*i)/3); ctx.lineTo(W, (H*i)/3); ctx.stroke();
-    }
-    ctx.shadowBlur = 0;
-    // Power points
-    ctx.fillStyle = 'rgba(56,189,248,0.85)';
-    for (const [px, py] of [[1/3,1/3],[2/3,1/3],[1/3,2/3],[2/3,2/3]]) {
-      ctx.beginPath(); ctx.arc(W*px, H*py, 5, 0, Math.PI*2); ctx.fill();
-    }
-    // Focal box
-    if (focalBox) {
-      const x = (focalBox.minX / GRID_W) * W;
-      const y = (focalBox.minY / GRID_H) * H;
-      const w = ((focalBox.maxX + 1 - focalBox.minX) / GRID_W) * W;
-      const h = ((focalBox.maxY + 1 - focalBox.minY) / GRID_H) * H;
-      ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 2;
-      ctx.setLineDash([6, 4]);
-      ctx.strokeRect(x, y, w, h);
-      ctx.setLineDash([]);
-      ctx.fillStyle = '#22d3ee';
-      ctx.font = 'bold 12px sans-serif';
-      const labelY = y - 4 < 12 ? y + 14 : y - 4;
-      ctx.fillText('Focal point', x + 4, labelY);
-    }
-    ctx.restore();
-  }
-  overlayToggle.addEventListener('change', e => { showOverlay = e.target.checked; redraw(); });
-
-  // ---------- Brand-color compliance ----------
-  function renderBrandChips() {
-    const wrap = document.getElementById('brandChips');
-    wrap.innerHTML = '';
-    brandColors.forEach((hex, i) => {
-      const chip = document.createElement('span');
-      chip.className = 'chip';
-      chip.innerHTML = `<span class="chip-swatch" style="background:${hex}"></span>${hex}<button data-i="${i}" type="button">×</button>`;
-      wrap.appendChild(chip);
+// ============================================================
+// QUEUE + FILMSTRIP RENDERING
+// ============================================================
+function renderQueue() {
+  queueStrip.innerHTML = '';
+  for (const item of state.items) {
+    const el = document.createElement('div');
+    el.className = 'qitem' + (item.id === state.selectedItemId ? ' active' : '');
+    el.innerHTML = `
+      ${item.thumbDataUrl ? `<img src="${item.thumbDataUrl}" alt="">` : ''}
+      <span class="type-tag ${item.type === 'video' ? 'vid' : ''}">${item.type === 'video' ? 'VID' : 'IMG'}</span>
+      <button class="qclose" type="button" title="Remove">×</button>
+      ${item.processing ? `<div class="processing-overlay">${item.type === 'video' ? `${item.frames.length}/${VIDEO_FRAMES}` : '...'}</div>` : ''}
+    `;
+    el.addEventListener('click', e => {
+      if (e.target.classList.contains('qclose')) return;
+      selectItem(item.id);
     });
-    wrap.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', e => {
-        const i = +e.target.dataset.i;
-        brandColors.splice(i, 1);
-        localStorage.setItem('brandColors', JSON.stringify(brandColors));
-        renderBrandChips();
-        if (cleanImageData) checkBrandCompliance();
-      });
+    el.querySelector('.qclose').addEventListener('click', e => {
+      e.stopPropagation();
+      removeItem(item.id);
     });
+    queueStrip.appendChild(el);
   }
-  document.getElementById('addBrand').addEventListener('click', () => {
-    const input = document.getElementById('brandHex');
-    let v = input.value.trim();
-    if (!v) return;
-    if (!v.startsWith('#')) v = '#' + v;
-    if (!hexToRgb(v)) return;
-    if (brandColors.length >= 6) return;
-    if (brandColors.includes(v.toLowerCase())) { input.value = ''; return; }
-    brandColors.push(v.toLowerCase());
-    localStorage.setItem('brandColors', JSON.stringify(brandColors));
-    input.value = '';
-    renderBrandChips();
-    if (cleanImageData) checkBrandCompliance();
+  const addBtn = document.createElement('div');
+  addBtn.className = 'qadd';
+  addBtn.innerHTML = '<span class="plus">+</span><span>Add more</span>';
+  addBtn.addEventListener('click', () => fileInputMore.click());
+  queueStrip.appendChild(addBtn);
+}
+
+function renderFilmstrip() {
+  const item = currentItem();
+  if (!item || item.type !== 'video' || !item.frames.length) {
+    filmstrip.style.display = 'none';
+    filmstrip.innerHTML = '';
+    return;
+  }
+  filmstrip.style.display = 'flex';
+  filmstrip.innerHTML = '';
+  item.frames.forEach((f, idx) => {
+    const el = document.createElement('div');
+    el.className = 'fitem' + (idx === state.selectedFrameIdx ? ' active' : '');
+    const overall = (f.audit.composition.rot + f.audit.composition.hBal + f.audit.composition.vBal) / 3;
+    const cls = overall >= 70 ? 'good' : overall >= 50 ? 'warn' : 'bad';
+    el.innerHTML = `
+      <img src="${f.dataUrl}" alt="">
+      <span class="fscore ${cls}">${overall.toFixed(0)}</span>
+      <span class="ftime">${f.t.toFixed(1)}s</span>
+    `;
+    el.addEventListener('click', () => selectFrame(idx));
+    filmstrip.appendChild(el);
   });
-  document.getElementById('brandHex').addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('addBrand').click(); }
-  });
+}
 
-  function checkBrandCompliance() {
-    const out = document.getElementById('brandResult');
-    if (brandColors.length === 0) {
-      out.innerHTML = '<span class="muted">Add 1–6 brand hex codes to check compliance.</span>';
-      return;
-    }
-    const brands = brandColors.map(hexToRgb).filter(Boolean);
-    const { data, width: W, height: H } = cleanImageData;
-    let total = 0, onBrand = 0;
-    const offBuckets = new Map();
-    const step = Math.max(1, Math.floor((W * H) / 25000)) * 4;
-    for (let i = 0; i < data.length; i += step) {
-      const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
-      if (a < 200) continue;
-      total++;
-      let minE = Infinity;
-      for (const bc of brands) {
-        const e = deltaE_approx({r,g,b}, bc);
-        if (e < minE) minE = e;
-      }
-      if (minE <= 25) onBrand++;
-      else {
-        const key = (r>>4)<<8 | (g>>4)<<4 | (b>>4);
-        const ent = offBuckets.get(key);
-        if (ent) { ent.r+=r; ent.g+=g; ent.b+=b; ent.n++; }
-        else offBuckets.set(key, {r,g,b,n:1});
-      }
-    }
-    const pct = total > 0 ? (onBrand / total) * 100 : 0;
-    const top = [...offBuckets.values()]
-      .map(e => ({ r: e.r/e.n, g: e.g/e.n, b: e.b/e.n, n: e.n }))
-      .sort((a,b) => b.n - a.n)
-      .slice(0, 5);
-    const verdictText = pct >= 70 ? 'On-brand' : pct >= 40 ? 'Mixed' : 'Off-brand';
-    const verdictClass = pct >= 70 ? 'pass' : pct >= 40 ? 'pending' : 'fail';
-    let html = `<div class="brand-pct"><b>${pct.toFixed(1)}%</b> on-brand <span class="badge ${verdictClass}">${verdictText}</span></div>`;
-    if (top.length) {
-      html += '<div class="off-label">Top off-brand colors:</div><div class="off-swatches">';
-      for (const c of top) {
-        const hex = rgbToHex(Math.round(c.r), Math.round(c.g), Math.round(c.b));
-        const sharePct = (c.n / total) * 100;
-        html += `<div class="off-swatch" title="${hex} · ${sharePct.toFixed(1)}%"><span style="background:${hex}"></span><small>${sharePct.toFixed(1)}%</small></div>`;
-      }
-      html += '</div>';
-    }
-    out.innerHTML = html;
+function currentItem() { return state.items.find(i => i.id === state.selectedItemId) || null; }
+function currentFrame() {
+  const item = currentItem();
+  if (!item || !item.frames.length) return null;
+  return item.frames[state.selectedFrameIdx] || item.frames[0];
+}
+
+function selectItem(id) {
+  state.selectedItemId = id;
+  state.selectedFrameIdx = 0;
+  state.manualPick = { text: false, bg: false, hexText: '', hexBg: '' };
+  renderQueue();
+  renderFilmstrip();
+  renderCurrentFrame();
+  renderAuditPanel();
+}
+
+function selectFrame(idx) {
+  state.selectedFrameIdx = idx;
+  state.manualPick = { text: false, bg: false, hexText: '', hexBg: '' };
+  renderFilmstrip();
+  renderCurrentFrame();
+  renderAuditPanel();
+}
+
+function removeItem(id) {
+  state.items = state.items.filter(i => i.id !== id);
+  if (state.selectedItemId === id) {
+    state.selectedItemId = state.items[0]?.id || null;
+    state.selectedFrameIdx = 0;
   }
-
-  // ---------- Whitespace ratio ----------
-  function checkWhitespace() {
-    const { data, width: W, height: H } = cleanImageData;
-    let total = 0, ws = 0;
-    const step = 4 * 4;
-    for (let i = 0; i < data.length; i += step) {
-      const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
-      if (a < 200) continue;
-      total++;
-      const { s, l } = hsl(r, g, b);
-      const isLight = l > 0.9 && s < 0.1;
-      const isBg = detectedBgColor && deltaE_approx({r,g,b}, detectedBgColor) <= 15;
-      if (isLight || isBg) ws++;
-    }
-    const pct = total > 0 ? (ws / total) * 100 : 0;
-    document.getElementById('wsVal').textContent = `${pct.toFixed(1)}%`;
-    let verdict, cls;
-    if (pct < 10) { verdict = 'Cluttered'; cls = 'fail'; }
-    else if (pct < 25) { verdict = 'Balanced'; cls = 'pass'; }
-    else if (pct < 50) { verdict = 'Breathable'; cls = 'pass'; }
-    else { verdict = 'Sparse / under-filled'; cls = 'pending'; }
-    document.getElementById('wsVerdict').innerHTML = `<span class="badge ${cls}">${verdict}</span>`;
-  }
-
-  // ---------- Orchestrator ----------
-  function runAllChecks() {
-    if (!img) return;
-    cleanImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    autoDetect();           // sets detectedBgColor + fills contrast pickers
-    checkBrandCompliance(); // uses detectedBgColor? no — independent
-    checkComposition();     // computes weightMap + draws overlay
-    checkWhitespace();      // uses detectedBgColor
-  }
-
-  // ---------- Reset ----------
-  resetBtn.addEventListener('click', () => {
-    img = null; cleanImageData = null; weightMap = null; focalBox = null; detectedBgColor = null;
-    fileInput.value = '';
+  renderQueue();
+  renderBatchSummary();
+  if (!state.selectedItemId) {
     workArea.style.display = 'none';
     uploadBox.style.display = 'block';
-    hexText.value = ''; hexBg.value = '';
-    picked = { text: false, bg: false };
-    setActive('text');
-    updateContrast();
-  });
+    fileInput.value = '';
+  } else {
+    renderFilmstrip();
+    renderCurrentFrame();
+    renderAuditPanel();
+  }
+}
 
-  // ---------- Init ----------
+// ============================================================
+// CANVAS RENDERING
+// ============================================================
+let cleanImageData = null;
+
+function renderCurrentFrame() {
+  const frame = currentFrame();
+  if (!frame) return;
+  const img = new Image();
+  img.onload = () => {
+    canvas.width = frame.width;
+    canvas.height = frame.height;
+    ctx.drawImage(img, 0, 0, frame.width, frame.height);
+    cleanImageData = ctx.getImageData(0, 0, frame.width, frame.height);
+    drawOverlay();
+    const item = currentItem();
+    itemMeta.textContent = `${item.name} · ${frame.width}×${frame.height}${item.type === 'video' ? ` · frame ${state.selectedFrameIdx + 1}/${item.frames.length} @ ${frame.t.toFixed(1)}s` : ''}`;
+  };
+  img.src = frame.dataUrl;
+}
+
+function drawOverlay() {
+  if (!state.showOverlay) return;
+  const frame = currentFrame();
+  if (!frame) return;
+  const W = canvas.width, H = canvas.height;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+  ctx.lineWidth = 1;
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur = 2;
+  for (let i = 1; i <= 2; i++) {
+    ctx.beginPath(); ctx.moveTo((W * i) / 3, 0); ctx.lineTo((W * i) / 3, H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, (H * i) / 3); ctx.lineTo(W, (H * i) / 3); ctx.stroke();
+  }
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(56,189,248,0.85)';
+  for (const [px, py] of [[1 / 3, 1 / 3], [2 / 3, 1 / 3], [1 / 3, 2 / 3], [2 / 3, 2 / 3]]) {
+    ctx.beginPath(); ctx.arc(W * px, H * py, 5, 0, Math.PI * 2); ctx.fill();
+  }
+  const focal = frame.audit.composition.focal;
+  if (focal) {
+    const b = focal.box;
+    const x = (b.minX / GRID_W) * W;
+    const y = (b.minY / GRID_H) * H;
+    const w = ((b.maxX + 1 - b.minX) / GRID_W) * W;
+    const h = ((b.maxY + 1 - b.minY) / GRID_H) * H;
+    ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.strokeRect(x, y, w, h);
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#22d3ee';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.fillText('Focal point', x + 4, y - 4 < 12 ? y + 14 : y - 4);
+  }
+  ctx.restore();
+}
+
+function redrawWithOverlay() {
+  const frame = currentFrame();
+  if (!frame || !cleanImageData) return;
+  ctx.putImageData(cleanImageData, 0, 0);
+  drawOverlay();
+}
+
+overlayToggle.addEventListener('change', e => { state.showOverlay = e.target.checked; redrawWithOverlay(); });
+
+// ============================================================
+// EYEDROPPER
+// ============================================================
+canvas.addEventListener('click', e => {
+  if (!cleanImageData) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor((e.clientX - rect.left) * (canvas.width / rect.width));
+  const y = Math.floor((e.clientY - rect.top) * (canvas.height / rect.height));
+  let r = 0, g = 0, bb = 0, n = 0;
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const px = Math.min(canvas.width - 1, Math.max(0, x + dx));
+      const py = Math.min(canvas.height - 1, Math.max(0, y + dy));
+      const i = (py * canvas.width + px) * 4;
+      r += cleanImageData.data[i];
+      g += cleanImageData.data[i + 1];
+      bb += cleanImageData.data[i + 2];
+      n++;
+    }
+  }
+  const hex = rgbToHex(Math.round(r / n), Math.round(g / n), Math.round(bb / n));
+  if (state.activeTarget === 'text') {
+    hexText.value = hex; state.manualPick.text = true; state.manualPick.hexText = hex;
+    setActiveTarget('bg');
+  } else {
+    hexBg.value = hex; state.manualPick.bg = true; state.manualPick.hexBg = hex;
+  }
+  updateContrastUI();
+});
+
+function setActiveTarget(t) {
+  state.activeTarget = t;
+  pickText.classList.toggle('active', t === 'text');
+  pickBg.classList.toggle('active', t === 'bg');
+}
+pickText.addEventListener('click', () => setActiveTarget('text'));
+pickBg.addEventListener('click', () => setActiveTarget('bg'));
+[hexText, hexBg].forEach(inp => inp.addEventListener('input', () => {
+  if (inp === hexText && hexToRgb(inp.value)) { state.manualPick.text = true; state.manualPick.hexText = inp.value; }
+  if (inp === hexBg && hexToRgb(inp.value)) { state.manualPick.bg = true; state.manualPick.hexBg = inp.value; }
+  updateContrastUI();
+}));
+
+// ============================================================
+// AUDIT PANEL RENDERING
+// ============================================================
+function setStatus(el, isPicked) {
+  el.classList.toggle('picked', isPicked);
+  el.querySelector('.status').textContent = isPicked ? 'Picked' : 'Not picked';
+}
+function setBadge(id, ok) {
+  const el = document.getElementById(id);
+  el.textContent = ok ? 'Pass' : 'Fail';
+  el.className = 'badge ' + (ok ? 'pass' : 'fail');
+}
+function setMetricColor(id, pct) {
+  const el = document.getElementById(id);
+  el.classList.remove('val-pass', 'val-warn', 'val-fail');
+  if (pct >= 80) el.classList.add('val-pass');
+  else if (pct >= 60) el.classList.add('val-warn');
+  else el.classList.add('val-fail');
+}
+
+function updateContrastUI() {
+  const t = hexToRgb(hexText.value);
+  const b = hexToRgb(hexBg.value);
+  setStatus(pickText, state.manualPick.text);
+  setStatus(pickBg, state.manualPick.bg);
+  swatchText.style.background = t ? hexText.value : '';
+  swatchBg.style.background = b ? hexBg.value : '';
+  if (t && b && state.manualPick.text && state.manualPick.bg) {
+    preview.style.color = hexText.value;
+    preview.style.background = hexBg.value;
+  } else {
+    preview.style.color = '#475569';
+    preview.style.background = '#1e293b';
+  }
+  if (!t || !b || !state.manualPick.text || !state.manualPick.bg) {
+    ratioEl.textContent = '— : 1';
+    pctEl.textContent = 'Pick both colors to see the score';
+    resultBox.classList.remove('ready');
+    levelsBox.classList.remove('ready');
+    ['aaNormal', 'aaLarge', 'aaaNormal', 'aaaLarge'].forEach(id => {
+      const el = document.getElementById(id);
+      el.textContent = '—'; el.className = 'badge pending';
+    });
+    return;
+  }
+  resultBox.classList.add('ready');
+  levelsBox.classList.add('ready');
+  const cr = contrast(t, b);
+  ratioEl.textContent = cr.toFixed(2) + ' : 1';
+  const pct = Math.max(0, Math.min(100, ((cr - 1) / 20) * 100));
+  let verdict;
+  if (cr >= 7) verdict = 'Excellent';
+  else if (cr >= 4.5) verdict = 'Good';
+  else if (cr >= 3) verdict = 'Fair (large text only)';
+  else verdict = 'Poor — hard to read';
+  pctEl.innerHTML = `Score: <b>${pct.toFixed(1)}%</b> · ${verdict}`;
+  setBadge('aaNormal', cr >= 4.5);
+  setBadge('aaLarge', cr >= 3);
+  setBadge('aaaNormal', cr >= 7);
+  setBadge('aaaLarge', cr >= 4.5);
+}
+
+function renderAuditPanel() {
+  const frame = currentFrame();
+  if (!frame) return;
+  const audit = frame.audit;
+
+  // Contrast — auto fill from detection
+  if (audit.contrast) {
+    const tHex = rgbToHex(audit.contrast.text.r, audit.contrast.text.g, audit.contrast.text.b);
+    const bHex = rgbToHex(audit.contrast.bg.r, audit.contrast.bg.g, audit.contrast.bg.b);
+    hexText.value = tHex; hexBg.value = bHex;
+    state.manualPick.text = true; state.manualPick.bg = true;
+  } else {
+    hexText.value = ''; hexBg.value = '';
+    state.manualPick.text = false; state.manualPick.bg = false;
+  }
+  updateContrastUI();
+
+  // Brand
+  renderBrandResult(audit.brand);
+
+  // Composition
+  document.getElementById('rotScore').textContent = `${audit.composition.rot.toFixed(0)}%`;
+  setMetricColor('rotScore', audit.composition.rot);
+  document.getElementById('hBal').textContent = `${audit.composition.hBal.toFixed(0)}%`;
+  setMetricColor('hBal', audit.composition.hBal);
+  document.getElementById('vBal').textContent = `${audit.composition.vBal.toFixed(0)}%`;
+  setMetricColor('vBal', audit.composition.vBal);
+  const focalEl = document.getElementById('focalPos');
+  if (audit.composition.focal) {
+    focalEl.textContent = audit.composition.focal.label;
+    focalEl.className = 'metric-val val-pass';
+  } else {
+    focalEl.textContent = 'none';
+    focalEl.className = 'metric-val';
+  }
+
+  // Whitespace
+  document.getElementById('wsVal').textContent = `${audit.whitespace.pct.toFixed(1)}%`;
+  document.getElementById('wsVerdict').innerHTML = `<span class="badge ${audit.whitespace.cls}">${audit.whitespace.verdict}</span>`;
+}
+
+function renderBrandResult(brand) {
+  const out = document.getElementById('brandResult');
+  if (!brand) {
+    out.innerHTML = '<span class="muted">Add 1–6 brand hex codes to check compliance.</span>';
+    return;
+  }
+  const verdictText = brand.pct >= 70 ? 'On-brand' : brand.pct >= 40 ? 'Mixed' : 'Off-brand';
+  const verdictClass = brand.pct >= 70 ? 'pass' : brand.pct >= 40 ? 'pending' : 'fail';
+  let html = `<div class="brand-pct"><b>${brand.pct.toFixed(1)}%</b> on-brand <span class="badge ${verdictClass}">${verdictText}</span></div>`;
+  if (brand.off.length) {
+    html += '<div class="off-label">Top off-brand colors:</div><div class="off-swatches">';
+    for (const c of brand.off) {
+      const hex = rgbToHex(Math.round(c.r), Math.round(c.g), Math.round(c.b));
+      html += `<div class="off-swatch" title="${hex} · ${c.share.toFixed(1)}%"><span style="background:${hex}"></span><small>${c.share.toFixed(1)}%</small></div>`;
+    }
+    html += '</div>';
+  }
+  out.innerHTML = html;
+}
+
+// ============================================================
+// BATCH SUMMARY
+// ============================================================
+function renderBatchSummary() {
+  if (state.items.length < 2 && !state.items.some(i => i.type === 'video')) {
+    batchCard.style.display = 'none';
+    return;
+  }
+  batchCard.style.display = 'block';
+  let rot = 0, hBal = 0, vBal = 0, ws = 0, brandPct = 0, ratio = 0;
+  let brandCount = 0, ratioCount = 0, n = 0;
+  for (const item of state.items) {
+    if (item.processing || !item.frames.length) continue;
+    const a = item.avgAudit || (item.frames[0].audit && {
+      rot: item.frames[0].audit.composition.rot,
+      hBal: item.frames[0].audit.composition.hBal,
+      vBal: item.frames[0].audit.composition.vBal,
+      ws: item.frames[0].audit.whitespace.pct,
+      ratio: item.frames[0].audit.contrast?.ratio || null,
+      brandPct: item.frames[0].audit.brand?.pct ?? null,
+    });
+    if (!a) continue;
+    rot += a.rot; hBal += a.hBal; vBal += a.vBal; ws += a.ws;
+    if (a.ratio != null) { ratio += a.ratio; ratioCount++; }
+    if (a.brandPct != null) { brandPct += a.brandPct; brandCount++; }
+    n++;
+  }
+  if (!n) { batchCard.style.display = 'none'; return; }
+  const imgCount = state.items.filter(i => i.type === 'image').length;
+  const vidCount = state.items.filter(i => i.type === 'video').length;
+  const summary = (label, val, suffix = '%') => {
+    const pct = parseFloat(val);
+    const cls = pct >= 80 ? 'val-pass' : pct >= 60 ? 'val-warn' : 'val-fail';
+    return `<div class="metric-row"><span>${label}</span><span class="metric-val ${cls}">${val}${suffix}</span></div>`;
+  };
+  let html = `<div class="metric-row"><span>Items</span><span class="metric-val">${imgCount} image${imgCount !== 1 ? 's' : ''}, ${vidCount} video${vidCount !== 1 ? 's' : ''}</span></div>`;
+  if (brandCount) html += summary('Avg on-brand', (brandPct / brandCount).toFixed(1));
+  if (ratioCount) html += `<div class="metric-row"><span>Avg contrast</span><span class="metric-val">${(ratio / ratioCount).toFixed(2)} : 1</span></div>`;
+  html += summary('Avg rule of thirds', (rot / n).toFixed(0));
+  html += summary('Avg H-balance', (hBal / n).toFixed(0));
+  html += summary('Avg V-balance', (vBal / n).toFixed(0));
+  html += summary('Avg whitespace', (ws / n).toFixed(1));
+  batchContent.innerHTML = html;
+}
+
+// ============================================================
+// BRAND COLOR MANAGEMENT
+// ============================================================
+function renderBrandChips() {
+  const wrap = document.getElementById('brandChips');
+  wrap.innerHTML = '';
+  state.brandColors.forEach((hex, i) => {
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.innerHTML = `<span class="chip-swatch" style="background:${hex}"></span>${hex}<button data-i="${i}" type="button">×</button>`;
+    wrap.appendChild(chip);
+  });
+  wrap.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const i = +e.target.dataset.i;
+      state.brandColors.splice(i, 1);
+      localStorage.setItem('brandColors', JSON.stringify(state.brandColors));
+      renderBrandChips();
+      recomputeAllBrand();
+    });
+  });
+}
+document.getElementById('addBrand').addEventListener('click', () => {
+  const input = document.getElementById('brandHex');
+  let v = input.value.trim();
+  if (!v) return;
+  if (!v.startsWith('#')) v = '#' + v;
+  if (!hexToRgb(v)) return;
+  if (state.brandColors.length >= 6) return;
+  if (state.brandColors.includes(v.toLowerCase())) { input.value = ''; return; }
+  state.brandColors.push(v.toLowerCase());
+  localStorage.setItem('brandColors', JSON.stringify(state.brandColors));
+  input.value = '';
   renderBrandChips();
-  updateContrast();
+  recomputeAllBrand();
+});
+document.getElementById('brandHex').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('addBrand').click(); }
+});
+
+function recomputeAllBrand() {
+  for (const item of state.items) {
+    if (item.processing) continue;
+    for (const f of item.frames) {
+      // Re-read pixels from dataUrl is expensive — instead, reload and recompute
+    }
+  }
+  // Reload all items' brand audit by re-decoding their dataUrls
+  reauditAllForBrand();
+}
+
+async function reauditAllForBrand() {
+  for (const item of state.items) {
+    if (item.processing) continue;
+    for (const f of item.frames) {
+      const img = new Image();
+      await new Promise(res => { img.onload = res; img.src = f.dataUrl; });
+      offCanvas.width = f.width; offCanvas.height = f.height;
+      offCtx.drawImage(img, 0, 0, f.width, f.height);
+      const imgData = offCtx.getImageData(0, 0, f.width, f.height);
+      f.audit.brand = computeBrand(imgData, state.brandColors);
+    }
+    if (item.type === 'video') item.avgAudit = computeAvgAudit(item.frames);
+  }
+  renderAuditPanel();
+  renderBatchSummary();
+}
+
+// ============================================================
+// CONTRAST TOOLBAR BUTTONS
+// ============================================================
+document.getElementById('autoBtn').addEventListener('click', () => {
+  const frame = currentFrame();
+  if (!frame || !frame.audit.contrast) return;
+  const c = frame.audit.contrast;
+  hexText.value = rgbToHex(c.text.r, c.text.g, c.text.b);
+  hexBg.value = rgbToHex(c.bg.r, c.bg.g, c.bg.b);
+  state.manualPick.text = true; state.manualPick.bg = true;
+  updateContrastUI();
+});
+document.getElementById('clearBtn').addEventListener('click', () => {
+  hexText.value = ''; hexBg.value = '';
+  state.manualPick = { text: false, bg: false, hexText: '', hexBg: '' };
+  setActiveTarget('text');
+  updateContrastUI();
+});
+
+// ============================================================
+// INIT
+// ============================================================
+renderBrandChips();
+updateContrastUI();
 </script>
 </body>
 </html>
