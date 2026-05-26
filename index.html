@@ -299,6 +299,21 @@
     background: #0f172a;
   }
   .fitem.active { border-color: #38bdf8; }
+  .fitem.worst { border-color: #f43f5e; }
+  .fflag {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    background: rgba(244,63,94,0.9);
+    color: #fff;
+    font-size: 8px;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .fflag.fhook { background: rgba(56,189,248,0.9); }
   .fitem img { width: 100%; display: block; }
   .fitem .ftime {
     position: absolute; bottom: 0; left: 0; right: 0;
@@ -982,6 +997,23 @@
           <div class="metric-row"><span>Clutter</span><span class="metric-val" id="clutterVal">—</span></div>
         </div>
 
+        <div class="card" id="reelCard" style="display:none">
+          <h3>Reel insights</h3>
+          <div class="metric-row"><span>Hook frame (frame 1)</span><span class="metric-val" id="reelHook">—</span></div>
+          <div class="metric-row"><span>Worst frame</span><span class="metric-val" id="reelWorst">—</span></div>
+          <div class="metric-row"><span>Frame consistency</span><span class="metric-val" id="reelConsistency">—</span></div>
+          <div class="metric-row"><span>Brand drift</span><span class="metric-val" id="reelDrift">—</span></div>
+          <div class="metric-row"><span>Shot cuts</span><span class="metric-val" id="reelCuts">—</span></div>
+          <div id="reelSafeZoneRow" style="display:none">
+            <div class="sub-head" style="margin-top:10px">Reel safe-zones (9:16)</div>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#cbd5e1;cursor:pointer">
+              <input type="checkbox" id="reelSafeZoneToggle" style="accent-color:#38bdf8">
+              Show IG/TikTok safe-zone overlay
+            </label>
+            <p class="palette-info" style="margin-top:4px">Bottom ~22% covers captions &amp; UI controls. Top ~10% has the profile/sound icon. Keep key content in the middle band.</p>
+          </div>
+        </div>
+
         <div class="card">
           <h3>Whitespace</h3>
           <div class="ws-val" id="wsVal">—</div>
@@ -1024,6 +1056,7 @@ const state = {
   activeTarget: 'text',
   manualPick: { text: false, bg: false, hexText: '', hexBg: '' },
   cvdSim: 'none',
+  showReelSafeZone: false,
 };
 try { state.brandColors = JSON.parse(localStorage.getItem('brandColors') || '[]'); } catch (e) {}
 
@@ -1712,6 +1745,68 @@ function computeFormat(width, height) {
   };
 }
 
+// === Reel-only (video) analysis ===
+function computeFrameScore(audit) {
+  if (!audit) return 0;
+  let score = 0, count = 0;
+  if (audit.composition) {
+    score += audit.composition.rot || 0; count++;
+    score += audit.composition.hBal || 0; count++;
+    score += audit.composition.vBal || 0; count++;
+    score += audit.composition.golden || 0; count++;
+  }
+  if (audit.sharpness) {
+    const s = audit.sharpness.cls === 'val-pass' ? 90 : audit.sharpness.cls === 'val-warn' ? 60 : 30;
+    score += s; count++;
+  }
+  return count ? score / count : 0;
+}
+function computeReelStats(item) {
+  if (item.type !== 'video' || !item.frames.length) return null;
+  const frames = item.frames;
+  // Per-frame composite scores
+  const scores = frames.map(f => computeFrameScore(f.audit));
+  const mean = scores.reduce((s,v) => s+v, 0) / scores.length;
+  const std = Math.sqrt(scores.reduce((s,v) => s + (v-mean)**2, 0) / scores.length);
+  // Worst frame
+  let worstIdx = 0, worstScore = Infinity;
+  scores.forEach((s, i) => { if (s < worstScore) { worstScore = s; worstIdx = i; } });
+  // Hook frame
+  const hookScore = scores[0];
+  const hookDelta = hookScore - mean;
+  // Brand drift
+  const brandPcts = frames.map(f => f.audit.brand && f.audit.brand.pct).filter(v => v != null);
+  let brandDrift = null;
+  if (brandPcts.length >= 2) {
+    const bm = brandPcts.reduce((s,v) => s+v, 0) / brandPcts.length;
+    const bstd = Math.sqrt(brandPcts.reduce((s,v) => s + (v-bm)**2, 0) / brandPcts.length);
+    brandDrift = { mean: bm, std: bstd, level: bstd < 8 ? 'Low' : bstd < 16 ? 'Moderate' : 'High' };
+  }
+  // Shot cuts using fingerprints
+  const cuts = [];
+  for (let i = 1; i < frames.length; i++) {
+    if (!frames[i].fingerprint || !frames[i-1].fingerprint) continue;
+    const a = frames[i-1].fingerprint.data;
+    const b = frames[i].fingerprint.data;
+    let diff = 0;
+    const n = a.length / 4;
+    for (let j = 0; j < a.length; j += 4) {
+      diff += Math.abs(a[j] - b[j]) + Math.abs(a[j+1] - b[j+1]) + Math.abs(a[j+2] - b[j+2]);
+    }
+    const avgDiff = diff / n / 3;
+    if (avgDiff > 38) cuts.push({ idx: i, t: frames[i].t, diff: avgDiff });
+  }
+  return {
+    meanScore: mean, std,
+    consistency: std < 8 ? 'High' : std < 16 ? 'Moderate' : 'Low',
+    worstIdx, worstScore,
+    hookScore, hookDelta,
+    brandDrift,
+    cuts,
+    scores,
+  };
+}
+
 function runAudit(imgData, brandColors) {
   const contrastRes = detectBgAndContrast(imgData);
   const brand = computeBrand(imgData, brandColors);
@@ -1854,6 +1949,11 @@ async function loadVideo(item, file) {
   // Need to actually decode frames — some browsers require play() before seeked fires reliably
   try { await video.play(); video.pause(); } catch (e) {}
 
+  // Fingerprint canvas for shot-cut detection
+  const fpCanvas = document.createElement('canvas');
+  fpCanvas.width = 32; fpCanvas.height = 32;
+  const fpCtx = fpCanvas.getContext('2d');
+
   for (let i = 0; i < VIDEO_FRAMES; i++) {
     const t = (duration / VIDEO_FRAMES) * (i + 0.5);
     await seekVideo(video, Math.min(duration - 0.01, t));
@@ -1862,15 +1962,16 @@ async function loadVideo(item, file) {
     const imageData = offCtx.getImageData(0, 0, w, h);
     const audit = runAudit(imageData, state.brandColors);
     audit.format = computeFormat(video.videoWidth, video.videoHeight);
-    item.frames.push({ t, dataUrl, width: w, height: h, audit });
-    // Use the middle frame as thumbnail
+    fpCtx.drawImage(offCanvas, 0, 0, 32, 32);
+    const fingerprint = fpCtx.getImageData(0, 0, 32, 32);
+    item.frames.push({ t, dataUrl, width: w, height: h, audit, fingerprint });
     if (i === Math.floor(VIDEO_FRAMES / 2)) {
       item.thumbDataUrl = await makeThumbDataUrl(offCanvas);
     }
-    // Live update queue
     renderQueue();
   }
   item.avgAudit = computeAvgAudit(item.frames);
+  item.reelStats = computeReelStats(item);
   URL.revokeObjectURL(url);
 }
 
@@ -1953,14 +2054,19 @@ function renderFilmstrip() {
   }
   filmstrip.style.display = 'flex';
   filmstrip.innerHTML = '';
+  const worstIdx = item.reelStats ? item.reelStats.worstIdx : -1;
   item.frames.forEach((f, idx) => {
     const el = document.createElement('div');
-    el.className = 'fitem' + (idx === state.selectedFrameIdx ? ' active' : '');
+    let extra = idx === state.selectedFrameIdx ? ' active' : '';
+    if (idx === worstIdx && idx !== state.selectedFrameIdx) extra += ' worst';
+    el.className = 'fitem' + extra;
     const overall = (f.audit.composition.rot + f.audit.composition.hBal + f.audit.composition.vBal) / 3;
     const cls = overall >= 70 ? 'good' : overall >= 50 ? 'warn' : 'bad';
+    const flag = idx === worstIdx ? '<span class="fflag">worst</span>' : (idx === 0 ? '<span class="fflag fhook">hook</span>' : '');
     el.innerHTML = `
       <img src="${f.dataUrl}" alt="">
       <span class="fscore ${cls}">${overall.toFixed(0)}</span>
+      ${flag}
       <span class="ftime">${f.t.toFixed(1)}s</span>
     `;
     el.addEventListener('click', () => selectFrame(idx));
@@ -2091,13 +2197,43 @@ function drawOverlay() {
     ctx.font = 'bold 12px sans-serif';
     ctx.fillText('Focal point', x + 4, y - 4 < 12 ? y + 14 : y - 4);
   }
+  // Reel safe-zone overlay (only for video items with 9:16 aspect)
+  const item = currentItem();
+  if (state.showReelSafeZone && item && item.type === 'video') {
+    const aspect = item.originalWidth / item.originalHeight;
+    if (aspect >= 0.54 && aspect <= 0.58) {
+      ctx.fillStyle = 'rgba(244,63,94,0.18)';
+      const topH = H * 0.10;
+      const botH = H * 0.22;
+      ctx.fillRect(0, 0, W, topH);
+      ctx.fillRect(0, H - botH, W, botH);
+      ctx.strokeStyle = 'rgba(244,63,94,0.65)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(0, topH); ctx.lineTo(W, topH); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, H - botH); ctx.lineTo(W, H - botH); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(244,63,94,0.95)';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillText('Profile / sticker zone', 8, topH - 6);
+      ctx.fillText('Captions / UI controls', 8, H - botH + 14);
+    }
+  }
   ctx.restore();
 }
 
 function redrawWithOverlay() {
   const frame = currentFrame();
   if (!frame || !cleanImageData) return;
-  ctx.putImageData(cleanImageData, 0, 0);
+  if (state.cvdSim && state.cvdSim !== 'none') {
+    const simData = new ImageData(new Uint8ClampedArray(cleanImageData.data), cleanImageData.width, cleanImageData.height);
+    applyCvdSimulation(simData, state.cvdSim);
+    ctx.putImageData(simData, 0, 0);
+  } else {
+    ctx.putImageData(cleanImageData, 0, 0);
+  }
   drawOverlay();
 }
 
@@ -2323,6 +2459,52 @@ function renderAuditPanel() {
   // Whitespace
   document.getElementById('wsVal').textContent = `${audit.whitespace.pct.toFixed(1)}%`;
   document.getElementById('wsVerdict').innerHTML = `<span class="badge ${audit.whitespace.cls}">${audit.whitespace.verdict}</span>`;
+
+  // Reel insights (videos only)
+  renderReelInsights();
+}
+
+function renderReelInsights() {
+  const item = currentItem();
+  const card = document.getElementById('reelCard');
+  if (!item || item.type !== 'video' || !item.reelStats) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+  const r = item.reelStats;
+  // Hook frame
+  const hookEl = document.getElementById('reelHook');
+  hookEl.textContent = `${r.hookScore.toFixed(0)}%${r.hookDelta >= 0 ? ' (+' : ' ('}${r.hookDelta.toFixed(0)} vs avg)`;
+  hookEl.className = 'metric-val ' + (r.hookScore >= 70 ? 'val-pass' : r.hookScore >= 50 ? 'val-warn' : 'val-fail');
+  // Worst frame
+  const worstEl = document.getElementById('reelWorst');
+  worstEl.textContent = `Frame ${r.worstIdx + 1} @ ${item.frames[r.worstIdx].t.toFixed(1)}s · ${r.worstScore.toFixed(0)}%`;
+  worstEl.className = 'metric-val val-warn';
+  worstEl.style.cursor = 'pointer';
+  worstEl.onclick = () => selectFrame(r.worstIdx);
+  worstEl.title = 'Click to jump to this frame';
+  // Consistency
+  const consEl = document.getElementById('reelConsistency');
+  consEl.textContent = `${r.consistency} (σ ${r.std.toFixed(1)})`;
+  consEl.className = 'metric-val ' + (r.consistency === 'High' ? 'val-pass' : r.consistency === 'Moderate' ? 'val-warn' : 'val-fail');
+  // Brand drift
+  const driftEl = document.getElementById('reelDrift');
+  if (r.brandDrift) {
+    driftEl.textContent = `${r.brandDrift.level} (σ ${r.brandDrift.std.toFixed(1)})`;
+    driftEl.className = 'metric-val ' + (r.brandDrift.level === 'Low' ? 'val-pass' : r.brandDrift.level === 'Moderate' ? 'val-warn' : 'val-fail');
+  } else {
+    driftEl.textContent = '— (no brand colors)';
+    driftEl.className = 'metric-val';
+  }
+  // Shot cuts
+  const cutsEl = document.getElementById('reelCuts');
+  cutsEl.textContent = r.cuts.length === 0 ? 'None detected' : `${r.cuts.length} at ${r.cuts.map(c => c.t.toFixed(1) + 's').join(', ')}`;
+  cutsEl.className = 'metric-val';
+  // Safe-zone row visibility (only for 9:16 reels)
+  const aspect = item.originalWidth / item.originalHeight;
+  const isReel = aspect >= 0.54 && aspect <= 0.58;
+  document.getElementById('reelSafeZoneRow').style.display = isReel ? 'block' : 'none';
 }
 
 function renderFormat(f) {
@@ -2601,6 +2783,11 @@ document.querySelectorAll('.sim-btn').forEach(btn => {
     document.querySelectorAll('.sim-btn').forEach(b => b.classList.toggle('active', b === btn));
     renderCurrentFrame();
   });
+});
+
+document.getElementById('reelSafeZoneToggle').addEventListener('change', e => {
+  state.showReelSafeZone = e.target.checked;
+  redrawWithOverlay();
 });
 
 // ============================================================
