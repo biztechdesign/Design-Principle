@@ -736,6 +736,7 @@
           <div class="metric-row"><span>Horizontal balance</span><span class="metric-val" id="hBal">—</span></div>
           <div class="metric-row"><span>Vertical balance</span><span class="metric-val" id="vBal">—</span></div>
           <div class="metric-row"><span>Focal point</span><span class="metric-val" id="focalPos">—</span></div>
+          <div class="metric-row"><span>Text alignment</span><span class="metric-val" id="alignType">—</span></div>
         </div>
 
         <div class="card">
@@ -957,6 +958,67 @@ function computeWeightMap(imgData, gw, gh) {
   return map;
 }
 
+function computeAlignment(weightMap) {
+  const sortedAll = Array.from(weightMap).sort((a, b) => b - a);
+  const thresh = sortedAll[Math.floor(sortedAll.length * 0.25)] || 0;
+
+  const rows = [];
+  for (let gy = 0; gy < GRID_H; gy++) {
+    let start = -1, end = -1;
+    let totalW = 0, weightedX = 0;
+    for (let gx = 0; gx < GRID_W; gx++) {
+      const v = weightMap[gy * GRID_W + gx];
+      if (v >= thresh) {
+        if (start === -1) start = gx;
+        end = gx;
+        totalW += v;
+        weightedX += (gx + 0.5) * v;
+      }
+    }
+    if (start >= 0 && totalW > 0) {
+      rows.push({
+        start: start / GRID_W,
+        end: (end + 1) / GRID_W,
+        center: weightedX / totalW / GRID_W,
+        width: (end + 1 - start) / GRID_W,
+      });
+    }
+  }
+  if (rows.length < 3) return { type: 'unknown', label: '—', score: 0 };
+
+  const avgWidth = rows.reduce((s, r) => s + r.width, 0) / rows.length;
+  if (avgWidth > 0.85) return { type: 'fullwidth', label: 'Full-width', score: 100 };
+
+  const meaningful = rows.filter(r => r.width > 0.1 && r.width < 0.9);
+  if (meaningful.length < 3) return { type: 'unknown', label: '—', score: 0 };
+
+  const stats = arr => {
+    const m = arr.reduce((s, x) => s + x, 0) / arr.length;
+    const v = arr.reduce((s, x) => s + (x - m) ** 2, 0) / arr.length;
+    return { mean: m, std: Math.sqrt(v) };
+  };
+  const sStarts = stats(meaningful.map(r => r.start));
+  const sEnds = stats(meaningful.map(r => r.end));
+  const sCenters = stats(meaningful.map(r => r.center));
+
+  const candidates = [
+    { type: 'left', std: sStarts.std },
+    { type: 'right', std: sEnds.std },
+    { type: 'center', std: sCenters.std },
+  ].sort((a, b) => a.std - b.std);
+
+  const best = candidates[0];
+  if (best.std > 0.12) return { type: 'mixed', label: 'Mixed / asymmetric', score: 40 };
+
+  const score = Math.max(0, Math.min(100, (1 - best.std / 0.15) * 100));
+  const labels = {
+    left: 'Left-aligned',
+    right: 'Right-aligned',
+    center: 'Center-aligned',
+  };
+  return { type: best.type, label: labels[best.type], score };
+}
+
 function computeComposition(weightMap) {
   const sortedDesc = Array.from(weightMap).sort((a, b) => b - a);
   const topThresh = sortedDesc[Math.floor(sortedDesc.length * 0.1)] || 0;
@@ -1022,7 +1084,8 @@ function computeComposition(weightMap) {
     const yLabel = fy < 0.33 ? 'top' : fy > 0.66 ? 'bottom' : 'middle';
     focal = { box: bestRegion, label: `${yLabel}-${xLabel}` };
   }
-  return { rot, hBal, vBal, focal };
+  const alignment = computeAlignment(weightMap);
+  return { rot, hBal, vBal, focal, alignment };
 }
 
 function computeWhitespace(imgData, bg) {
@@ -1543,6 +1606,19 @@ function renderAuditPanel() {
   } else {
     focalEl.textContent = 'none';
     focalEl.className = 'metric-val';
+  }
+  const align = audit.composition.alignment;
+  const alignEl = document.getElementById('alignType');
+  if (align && align.type !== 'unknown') {
+    alignEl.textContent = `${align.label}${align.score ? ' · ' + align.score.toFixed(0) + '%' : ''}`;
+    if (align.type === 'mixed') {
+      alignEl.className = 'metric-val val-warn';
+    } else {
+      setMetricColor('alignType', align.score);
+    }
+  } else {
+    alignEl.textContent = '—';
+    alignEl.className = 'metric-val';
   }
 
   // Whitespace
