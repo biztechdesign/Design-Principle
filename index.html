@@ -2637,63 +2637,8 @@ function sampleAt(x, y) {
   return { r: Math.round(r/n), g: Math.round(g/n), b: Math.round(b/n) };
 }
 
-canvas.addEventListener('mousemove', e => {
-  if (!cleanImageData) return;
-  const rect = canvas.getBoundingClientRect();
-  const cardRect = canvas.parentElement.getBoundingClientRect();
-  const x = Math.floor((e.clientX - rect.left) * (canvas.width / rect.width));
-  const y = Math.floor((e.clientY - rect.top) * (canvas.height / rect.height));
-  if (x < 0 || y < 0 || x >= canvas.width || y >= canvas.height) {
-    eyedropTip.style.display = 'none';
-    eyedropRing.style.display = 'none';
-    return;
-  }
-  const c = sampleAt(x, y);
-  const hex = rgbToHex(c.r, c.g, c.b);
-  // Swatch + tooltip
-  eyedropSwatch.style.background = hex;
-  eyedropHex.textContent = hex.toUpperCase();
-  eyedropRgb.textContent = `rgb(${c.r}, ${c.g}, ${c.b})`;
-  const isText = state.activeTarget === 'text';
-  eyedropTarget.textContent = `→ ${isText ? 'Text color' : 'Background color'}`;
-  eyedropTarget.classList.toggle('bg', !isText);
-  // Live contrast preview against the currently-picked other color
-  const otherHex = isText ? hexBg.value : hexText.value;
-  const other = hexToRgb(otherHex);
-  if (other) {
-    const cr = contrast(c, other);
-    eyedropContrast.textContent = `contrast vs ${isText ? 'bg' : 'text'}: ${cr.toFixed(2)}:1`;
-    eyedropContrast.style.color = cr >= 4.5 ? '#bbf7d0' : cr >= 3 ? '#fde68a' : '#fecaca';
-  } else {
-    eyedropContrast.textContent = '';
-  }
-  // Position tooltip
-  let tipX = e.clientX + 18;
-  let tipY = e.clientY + 18;
-  const tipW = 200, tipH = 70;
-  if (tipX + tipW > window.innerWidth - 8) tipX = e.clientX - tipW - 18;
-  if (tipY + tipH > window.innerHeight - 8) tipY = e.clientY - tipH - 18;
-  eyedropTip.style.left = tipX + 'px';
-  eyedropTip.style.top = tipY + 'px';
-  eyedropTip.style.display = 'flex';
-  // Ring on canvas — must account for the canvas-card's internal scroll offset,
-  // since the ring is position:absolute inside it
-  const card = canvas.parentElement;
-  const ringX = e.clientX - cardRect.left + card.scrollLeft;
-  const ringY = e.clientY - cardRect.top + card.scrollTop;
-  eyedropRing.style.left = ringX + 'px';
-  eyedropRing.style.top = ringY + 'px';
-  eyedropRing.style.display = 'block';
-  // Flip ring color for visibility
-  const lum = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
-  eyedropRing.classList.toggle('dark', lum > 0.6);
-});
-
-canvas.addEventListener('mouseleave', () => {
-  eyedropTip.style.display = 'none';
-  eyedropRing.style.display = 'none';
-});
-
+// Eyedropper hover preview disabled — clicking still picks colors via the
+// click handler below. Set state.eyedropperHover = true to re-enable.
 canvas.addEventListener('click', e => {
   if (!cleanImageData) return;
   const rect = canvas.getBoundingClientRect();
