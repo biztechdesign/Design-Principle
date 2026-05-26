@@ -1576,6 +1576,81 @@ function computeAlignment(imgData) {
   return { type: best.type, label: labels[best.type], score };
 }
 
+// Text-aware focal point — picks the most prominent text block by edge-density,
+// since the weight-map focal can be fooled by dark background imagery (e.g. a
+// laptop photo behind white text). Returns null if not enough text rows found.
+function computeTextFocal(imgData) {
+  const { data, width: W, height: H } = imgData;
+  const sampleStep = Math.max(1, Math.floor(W / 260));
+  const rowStep = Math.max(1, Math.floor(H / 200));
+  const EDGE_THRESH = 70;
+  const MIN_EDGES = 8;
+
+  const rows = [];
+  for (let y = 0; y < H; y += rowStep) {
+    const edges = [];
+    let prevLum = null;
+    for (let x = 0; x < W; x += sampleStep) {
+      const i = (y * W + x) * 4;
+      if (data[i + 3] < 200) { prevLum = null; continue; }
+      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      if (prevLum !== null && Math.abs(lum - prevLum) > EDGE_THRESH) edges.push(x);
+      prevLum = lum;
+    }
+    if (edges.length >= MIN_EDGES) {
+      rows.push({ y, minX: edges[0], maxX: edges[edges.length - 1], count: edges.length });
+    }
+  }
+  if (rows.length < 3) return null;
+
+  // Group consecutive text rows into blocks (allowing small gaps)
+  const blocks = [];
+  let cur = null;
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    if (cur && rows[i - 1] && rows[i - 1].y + rowStep * 3 >= r.y) {
+      cur.maxY = r.y;
+      cur.minX = Math.min(cur.minX, r.minX);
+      cur.maxX = Math.max(cur.maxX, r.maxX);
+      cur.totalEdges += r.count;
+      cur.peakEdges = Math.max(cur.peakEdges, r.count);
+      cur.rowCount++;
+    } else {
+      if (cur) blocks.push(cur);
+      cur = { minY: r.y, maxY: r.y, minX: r.minX, maxX: r.maxX, totalEdges: r.count, peakEdges: r.count, rowCount: 1 };
+    }
+  }
+  if (cur) blocks.push(cur);
+
+  // Require at least 2 rows for a real block (filter out logo / noise)
+  const real = blocks.filter(b => b.rowCount >= 2);
+  if (!real.length) return null;
+
+  // Score = avg edges per row × sqrt(row count). Avg-edges-per-row tracks letter
+  // size (bigger text = more strokes per row), so this picks the biggest text.
+  let best = real[0], bestScore = 0;
+  for (const b of real) {
+    const avgPerRow = b.totalEdges / b.rowCount;
+    const score = avgPerRow * Math.sqrt(b.rowCount);
+    if (score > bestScore) { best = b; bestScore = score; }
+  }
+
+  // Convert to grid coords with a small inset so the box hugs the text
+  const box = {
+    minX: Math.max(0, Math.floor((best.minX / W) * GRID_W)),
+    maxX: Math.min(GRID_W - 1, Math.floor((best.maxX / W) * GRID_W)),
+    minY: Math.max(0, Math.floor((best.minY / H) * GRID_H)),
+    maxY: Math.min(GRID_H - 1, Math.floor((best.maxY / H) * GRID_H)),
+  };
+  if (box.maxX < box.minX) box.maxX = box.minX;
+  if (box.maxY < box.minY) box.maxY = box.minY;
+  const fx = ((box.minX + box.maxX) / 2 + 0.5) / GRID_W;
+  const fy = ((box.minY + box.maxY) / 2 + 0.5) / GRID_H;
+  const xLabel = fx < 0.33 ? 'left' : fx > 0.66 ? 'right' : 'center';
+  const yLabel = fy < 0.33 ? 'top' : fy > 0.66 ? 'bottom' : 'middle';
+  return { box, label: `${yLabel}-${xLabel}`, size: best.totalEdges };
+}
+
 function computeComposition(weightMap) {
   const sortedDesc = Array.from(weightMap).sort((a, b) => b - a);
   const topThresh = sortedDesc[Math.floor(sortedDesc.length * 0.1)] || 0;
@@ -2091,6 +2166,9 @@ function runAudit(imgData, brandColors) {
   const brandHierarchy = computeBrandHierarchy(imgData, brandColors);
   const weightMap = computeWeightMap(imgData, GRID_W, GRID_H);
   const composition = computeComposition(weightMap);
+  // Text-aware focal point overrides weight-map focal when significant text is present
+  const textFocal = computeTextFocal(imgData);
+  if (textFocal) composition.focal = textFocal;
   composition.alignment = computeAlignment(imgData);
   composition.golden = computeGoldenScore(weightMap);
   composition.symmetry = computeSymmetry(imgData);
