@@ -804,6 +804,112 @@
     font-size: 11px;
     margin-top: 8px;
   }
+
+  /* Insights card */
+  .insights-card { border-color: rgba(168,85,247,0.35); background: linear-gradient(180deg, rgba(168,85,247,0.06), #0f172a); }
+  .insight-item {
+    display: flex;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #1e293b;
+  }
+  .insight-item:last-child { border-bottom: none; }
+  .insight-sev {
+    width: 6px;
+    border-radius: 3px;
+    flex: 0 0 auto;
+    align-self: stretch;
+  }
+  .insight-sev.high { background: #f43f5e; }
+  .insight-sev.medium { background: #f59e0b; }
+  .insight-sev.low { background: #38bdf8; }
+  .insight-text { flex: 1; font-size: 12px; line-height: 1.45; }
+  .insight-text .what { color: #f1f5f9; font-weight: 500; }
+  .insight-text .suggest { color: #94a3b8; margin-top: 3px; }
+  .insights-empty { font-size: 12px; color: #22c55e; padding: 6px 0; }
+
+  /* Outlier badge in comparison row */
+  .outlier-badge {
+    display: inline-block;
+    background: rgba(244,63,94,0.2);
+    color: #fecaca;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 4px;
+    text-transform: uppercase;
+  }
+
+  /* Brand presets */
+  .preset-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 8px;
+    min-height: 4px;
+  }
+  .preset-pill {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #cbd5e1;
+    padding: 3px 8px 3px 6px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+  }
+  .preset-pill:hover { background: #243246; border-color: #38bdf8; }
+  .preset-pill .preset-x {
+    background: none; border: none; color: #64748b; cursor: pointer;
+    font-size: 12px; padding: 0 2px; line-height: 1;
+  }
+  .preset-pill .preset-x:hover { color: #f87171; }
+  .preset-pill.add-new {
+    color: #38bdf8;
+    border-color: #38bdf8;
+    border-style: dashed;
+  }
+  .preset-save {
+    display: flex; gap: 6px; margin-bottom: 8px;
+  }
+  .preset-save input {
+    flex: 1; background: #1e293b; border: 1px solid #334155;
+    color: #e2e8f0; padding: 5px 8px; border-radius: 6px;
+    font-size: 12px;
+  }
+  .preset-save button {
+    background: #38bdf8; color: #0f172a; border: none;
+    padding: 5px 10px; border-radius: 6px; cursor: pointer;
+    font-size: 11px; font-weight: 600;
+  }
+  .preset-save button.ghost { background: #334155; color: #cbd5e1; }
+
+  /* Keyboard hint */
+  .kbd-hint {
+    text-align: center;
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 12px;
+    padding: 8px;
+    background: #0f172a;
+    border-radius: 6px;
+    border: 1px solid #1e293b;
+  }
+  .kbd-hint kbd {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-bottom-width: 2px;
+    color: #cbd5e1;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 10px;
+    margin: 0 2px;
+  }
 </style>
 </head>
 <body>
@@ -883,6 +989,11 @@
       <div class="panel">
         <div class="selected-banner" id="selectedBanner">Selected item</div>
 
+        <div class="card insights-card" id="insightsCard" style="display:none">
+          <h3>Insights &amp; suggestions</h3>
+          <div id="insightsList"></div>
+        </div>
+
         <div class="card">
           <h3>Format &amp; platform fit</h3>
           <div class="mini-grid">
@@ -906,6 +1017,12 @@
           <div class="brand-input-row">
             <input id="brandHex" placeholder="#0fb5b5" maxlength="7" />
             <button id="addBrand" type="button">Add</button>
+          </div>
+          <div class="preset-row" id="presetRow"></div>
+          <div class="preset-save" id="presetSave" style="display:none">
+            <input id="presetName" placeholder="Preset name (e.g. Biztech)" maxlength="20" />
+            <button id="savePresetBtn" type="button">Save</button>
+            <button id="cancelPresetBtn" type="button" class="ghost">Cancel</button>
           </div>
           <div class="chips" id="brandChips"></div>
           <div id="brandResult"><span class="muted">Add 1–6 brand hex codes to check compliance.</span></div>
@@ -1024,6 +1141,11 @@
           <h3 id="batchTitle">All items</h3>
           <p class="batch-note">Each row = one uploaded item. Click any row to switch to that item. The last row is the batch average.</p>
           <div id="batchContent"></div>
+          <div id="outlierNote"></div>
+        </div>
+
+        <div class="kbd-hint">
+          <kbd>←</kbd> <kbd>→</kbd> switch frame &nbsp;·&nbsp; <kbd>↑</kbd> <kbd>↓</kbd> switch item &nbsp;·&nbsp; <kbd>G</kbd> toggle grid &nbsp;·&nbsp; <kbd>S</kbd> safe-zone &nbsp;·&nbsp; <kbd>C</kbd> cycle CVD sim
         </div>
       </div>
     </div>
@@ -2462,6 +2584,9 @@ function renderAuditPanel() {
 
   // Reel insights (videos only)
   renderReelInsights();
+
+  // Plain-language insights (G)
+  renderInsights();
 }
 
 function renderReelInsights() {
@@ -2683,6 +2808,30 @@ function renderBatchSummary() {
   batchContent.querySelectorAll('.compare-row[data-id]').forEach(row => {
     row.addEventListener('click', () => selectItem(row.dataset.id));
   });
+
+  // Outlier detection (G): which item differs most from the rest
+  const outlierEl = document.getElementById('outlierNote');
+  if (rows.length >= 3 && outlierEl) {
+    const scores = rows.map(r => (r.a.rot + r.a.hBal + r.a.vBal) / 3);
+    const m = scores.reduce((s,v) => s+v, 0) / scores.length;
+    const sd = Math.sqrt(scores.reduce((s,v) => s + (v-m)**2, 0) / scores.length);
+    let worstDelta = 0, worstIdx = -1, bestDelta = 0, bestIdx = -1;
+    scores.forEach((s, i) => {
+      const d = s - m;
+      if (d < worstDelta) { worstDelta = d; worstIdx = i; }
+      if (d > bestDelta) { bestDelta = d; bestIdx = i; }
+    });
+    let note = '';
+    if (sd > 8 && worstIdx >= 0) {
+      note += `<div class="warning-row" style="margin-top:10px"><b>Outlier:</b> ${rows[worstIdx].item.name} scores ${Math.abs(worstDelta).toFixed(0)} points below the batch average. Consider re-shooting or aligning it to the rest.</div>`;
+    }
+    if (bestIdx >= 0 && bestDelta > 5) {
+      note += `<div class="warning-row" style="margin-top:6px;background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3);color:#bbf7d0"><b>Strongest:</b> ${rows[bestIdx].item.name} (+${bestDelta.toFixed(0)} pts above average).</div>`;
+    }
+    outlierEl.innerHTML = note;
+  } else if (outlierEl) {
+    outlierEl.innerHTML = '';
+  }
 }
 
 // ============================================================
@@ -2774,6 +2923,247 @@ document.getElementById('clearBtn').addEventListener('click', () => {
 });
 
 // ============================================================
+// INSIGHTS (G) — rule-based explanations + suggestions
+// ============================================================
+function generateInsights(audit, reelStats) {
+  const out = [];
+  if (audit.contrast && audit.contrast.ratio < 4.5) {
+    out.push({
+      sev: audit.contrast.ratio < 3 ? 'high' : 'medium',
+      what: `Text/background contrast is ${audit.contrast.ratio.toFixed(2)}:1 — ${audit.contrast.ratio < 3 ? 'fails WCAG AA for both normal and large text.' : 'fails WCAG AA for normal-size text.'}`,
+      sug: 'Darken the text or lighten the background until ratio ≥ 4.5:1.',
+    });
+  }
+  if (audit.composition && audit.composition.rot < 40) {
+    out.push({
+      sev: 'medium',
+      what: `Subject sits far from any rule-of-thirds power point (score ${audit.composition.rot.toFixed(0)}%).`,
+      sug: 'Reposition the focal element to roughly one-third from an edge.',
+    });
+  }
+  if (audit.composition && audit.composition.hBal < 60) {
+    out.push({
+      sev: 'low',
+      what: `Horizontal balance is ${audit.composition.hBal.toFixed(0)}% — content leans to one side.`,
+      sug: 'Move some weight from the heavy side, or use whitespace to offset it.',
+    });
+  }
+  if (audit.composition && audit.composition.vBal < 60) {
+    out.push({
+      sev: 'low',
+      what: `Vertical balance is ${audit.composition.vBal.toFixed(0)}%.`,
+      sug: 'Distribute content more evenly top-to-bottom.',
+    });
+  }
+  if (audit.composition && audit.composition.hierarchy && audit.composition.hierarchy.score < 40) {
+    out.push({
+      sev: 'medium',
+      what: 'No clear visual hierarchy — everything competes for attention equally.',
+      sug: 'Make the most important element bigger, brighter, or more saturated than the rest.',
+    });
+  }
+  if (audit.sharpness && audit.sharpness.cls === 'val-fail') {
+    out.push({
+      sev: 'high',
+      what: 'Image is blurry (low Laplacian variance).',
+      sug: 'Use a higher-resolution source or re-export at native dimensions.',
+    });
+  }
+  if (audit.whitespace && audit.whitespace.pct < 10) {
+    out.push({
+      sev: 'medium',
+      what: `Whitespace is only ${audit.whitespace.pct.toFixed(0)}% — the design looks cluttered.`,
+      sug: 'Drop non-essential elements or increase padding around the main subject.',
+    });
+  }
+  if (audit.textStats && audit.textStats.excessive) {
+    out.push({
+      sev: 'medium',
+      what: `Text density is ${audit.textStats.density.toFixed(0)}% — likely too much copy for one frame.`,
+      sug: 'Split into multiple slides/frames, or cut the message to one core idea.',
+    });
+  }
+  if (audit.brand && audit.brand.pct < 40) {
+    out.push({
+      sev: 'medium',
+      what: `Only ${audit.brand.pct.toFixed(0)}% of pixels match your brand palette.`,
+      sug: 'Apply brand colors to backgrounds, headlines, or accents.',
+    });
+  }
+  if (audit.composition && audit.composition.safeArea && !audit.composition.safeArea.ok) {
+    out.push({
+      sev: 'low',
+      what: `${audit.composition.safeArea.touches} regions touch the canvas edge.`,
+      sug: 'Add inner padding so nothing crops on small screens or when cards round corners.',
+    });
+  }
+  if (audit.clutter && audit.clutter.cls === 'val-fail') {
+    out.push({
+      sev: 'medium',
+      what: `${audit.clutter.components} distinct visual regions detected — feels cluttered.`,
+      sug: 'Consolidate elements into fewer visual groups; let breathing room separate sections.',
+    });
+  }
+  if (reelStats) {
+    if (reelStats.hookScore < 60) {
+      out.push({
+        sev: 'high',
+        what: `Hook frame (frame 1) scores only ${reelStats.hookScore.toFixed(0)}% — viewers decide in <2s.`,
+        sug: 'Lead with your strongest visual or biggest pattern interrupt.',
+      });
+    }
+    if (reelStats.brandDrift && reelStats.brandDrift.level === 'High') {
+      out.push({
+        sev: 'medium',
+        what: `Brand-color use drifts ±${reelStats.brandDrift.std.toFixed(0)}% across the reel.`,
+        sug: 'Keep brand color saturation/usage steady frame-to-frame.',
+      });
+    }
+    if (reelStats.consistency === 'Low') {
+      out.push({
+        sev: 'medium',
+        what: `Frame quality varies a lot (σ ${reelStats.std.toFixed(1)}).`,
+        sug: 'Tighten composition so every frame holds the same quality bar.',
+      });
+    }
+  }
+  const order = { high: 0, medium: 1, low: 2 };
+  out.sort((a, b) => order[a.sev] - order[b.sev]);
+  return out;
+}
+
+function renderInsights() {
+  const item = currentItem();
+  const frame = currentFrame();
+  const card = document.getElementById('insightsCard');
+  if (!frame) { card.style.display = 'none'; return; }
+  const insights = generateInsights(frame.audit, item && item.reelStats);
+  card.style.display = 'block';
+  const list = document.getElementById('insightsList');
+  if (!insights.length) {
+    list.innerHTML = '<div class="insights-empty">No issues detected — this design follows the principles well.</div>';
+    return;
+  }
+  list.innerHTML = insights.map(i => `
+    <div class="insight-item">
+      <div class="insight-sev ${i.sev}"></div>
+      <div class="insight-text">
+        <div class="what">${i.what}</div>
+        <div class="suggest">→ ${i.sug}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// BRAND PRESETS (I)
+// ============================================================
+function loadPresets() {
+  try { return JSON.parse(localStorage.getItem('brandPresets') || '{}'); } catch (e) { return {}; }
+}
+function savePresets(p) {
+  localStorage.setItem('brandPresets', JSON.stringify(p));
+}
+function renderPresets() {
+  const presets = loadPresets();
+  const row = document.getElementById('presetRow');
+  const names = Object.keys(presets);
+  let html = '';
+  for (const name of names) {
+    const sw = presets[name].slice(0, 3).map(h => `<span class="chip-swatch" style="background:${h};width:10px;height:10px"></span>`).join('');
+    html += `<span class="preset-pill" data-name="${name}" title="Load ${name}">${sw}${name}<button class="preset-x" data-del="${name}" type="button">×</button></span>`;
+  }
+  html += `<span class="preset-pill add-new" id="addPresetBtn">+ Save current</span>`;
+  row.innerHTML = html;
+  row.querySelectorAll('.preset-pill[data-name]').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.classList.contains('preset-x')) return;
+      const name = el.dataset.name;
+      state.brandColors = [...(presets[name] || [])];
+      localStorage.setItem('brandColors', JSON.stringify(state.brandColors));
+      renderBrandChips();
+      recomputeAllBrand();
+    });
+  });
+  row.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const name = btn.dataset.del;
+      const ps = loadPresets();
+      delete ps[name];
+      savePresets(ps);
+      renderPresets();
+    });
+  });
+  document.getElementById('addPresetBtn').addEventListener('click', () => {
+    if (!state.brandColors.length) { alert('Add brand colors first.'); return; }
+    document.getElementById('presetSave').style.display = 'flex';
+    document.getElementById('presetName').focus();
+  });
+}
+
+document.getElementById('savePresetBtn').addEventListener('click', () => {
+  const nameInput = document.getElementById('presetName');
+  const name = nameInput.value.trim();
+  if (!name) return;
+  const ps = loadPresets();
+  ps[name] = [...state.brandColors];
+  savePresets(ps);
+  nameInput.value = '';
+  document.getElementById('presetSave').style.display = 'none';
+  renderPresets();
+});
+document.getElementById('cancelPresetBtn').addEventListener('click', () => {
+  document.getElementById('presetName').value = '';
+  document.getElementById('presetSave').style.display = 'none';
+});
+document.getElementById('presetName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('savePresetBtn').click(); }
+  if (e.key === 'Escape') { e.preventDefault(); document.getElementById('cancelPresetBtn').click(); }
+});
+
+// ============================================================
+// KEYBOARD SHORTCUTS (I)
+// ============================================================
+document.addEventListener('keydown', e => {
+  // Skip if typing in an input/textarea
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  const item = currentItem();
+  if (!item) return;
+  if (e.key === 'ArrowLeft' && item.type === 'video') {
+    e.preventDefault();
+    selectFrame(Math.max(0, state.selectedFrameIdx - 1));
+  } else if (e.key === 'ArrowRight' && item.type === 'video') {
+    e.preventDefault();
+    selectFrame(Math.min(item.frames.length - 1, state.selectedFrameIdx + 1));
+  } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    const idx = state.items.findIndex(i => i.id === state.selectedItemId);
+    const dir = e.key === 'ArrowUp' ? -1 : 1;
+    const nextIdx = (idx + dir + state.items.length) % state.items.length;
+    selectItem(state.items[nextIdx].id);
+  } else if (e.key.toLowerCase() === 'g') {
+    e.preventDefault();
+    state.showOverlay = !state.showOverlay;
+    overlayToggle.checked = state.showOverlay;
+    redrawWithOverlay();
+  } else if (e.key.toLowerCase() === 's') {
+    e.preventDefault();
+    state.showReelSafeZone = !state.showReelSafeZone;
+    const t = document.getElementById('reelSafeZoneToggle');
+    if (t) t.checked = state.showReelSafeZone;
+    redrawWithOverlay();
+  } else if (e.key.toLowerCase() === 'c') {
+    e.preventDefault();
+    const modes = ['none', 'protan', 'deutan', 'tritan'];
+    const cur = modes.indexOf(state.cvdSim);
+    state.cvdSim = modes[(cur + 1) % modes.length];
+    document.querySelectorAll('.sim-btn').forEach(b => b.classList.toggle('active', b.dataset.sim === state.cvdSim));
+    renderCurrentFrame();
+  }
+});
+
+// ============================================================
 // CVD SIM BUTTONS
 // ============================================================
 document.querySelectorAll('.sim-btn').forEach(btn => {
@@ -2794,6 +3184,7 @@ document.getElementById('reelSafeZoneToggle').addEventListener('change', e => {
 // INIT
 // ============================================================
 renderBrandChips();
+renderPresets();
 updateContrastUI();
 </script>
 </body>
