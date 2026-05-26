@@ -2676,9 +2676,11 @@ canvas.addEventListener('mousemove', e => {
   eyedropTip.style.left = tipX + 'px';
   eyedropTip.style.top = tipY + 'px';
   eyedropTip.style.display = 'flex';
-  // Ring on canvas
-  const ringX = e.clientX - cardRect.left;
-  const ringY = e.clientY - cardRect.top;
+  // Ring on canvas — must account for the canvas-card's internal scroll offset,
+  // since the ring is position:absolute inside it
+  const card = canvas.parentElement;
+  const ringX = e.clientX - cardRect.left + card.scrollLeft;
+  const ringY = e.clientY - cardRect.top + card.scrollTop;
   eyedropRing.style.left = ringX + 'px';
   eyedropRing.style.top = ringY + 'px';
   eyedropRing.style.display = 'block';
