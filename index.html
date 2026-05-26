@@ -19,19 +19,147 @@
   p.sub { color: #94a3b8; margin: 0 0 20px; font-size: 14px; }
   h3 { font-size: 13px; margin: 0 0 10px; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.5px; }
 
-  .upload {
-    border: 2px dashed #334155;
-    border-radius: 12px;
-    padding: 28px;
-    text-align: center;
-    background: #1e293b;
-    cursor: pointer;
-    transition: border-color .15s, background .15s;
+  /* Hero (empty state) */
+  .hero {
+    min-height: 78vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
   }
-  .upload:hover { border-color: #64748b; background: #243246; }
-  .upload input { display: none; }
-  .upload-label { color: #cbd5e1; font-size: 14px; }
-  .upload-label strong { color: #38bdf8; }
+  .hero-inner {
+    max-width: 720px;
+    width: 100%;
+    text-align: center;
+  }
+  .hero-badge {
+    display: inline-block;
+    padding: 5px 14px;
+    background: rgba(56,189,248,0.1);
+    color: #38bdf8;
+    border: 1px solid rgba(56,189,248,0.3);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+  }
+  .hero-title {
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin: 0 0 16px;
+    line-height: 1.15;
+    color: #f1f5f9;
+    background: linear-gradient(135deg, #f1f5f9, #cbd5e1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-sub {
+    font-size: 15px;
+    color: #94a3b8;
+    margin: 0 auto 32px;
+    max-width: 560px;
+    line-height: 1.6;
+  }
+  .hero-upload {
+    display: block;
+    border: 2px dashed #334155;
+    border-radius: 16px;
+    padding: 36px 24px;
+    background: linear-gradient(180deg, #1e293b, #182032);
+    cursor: pointer;
+    transition: border-color .2s, transform .2s, background .2s, box-shadow .2s;
+    margin-bottom: 32px;
+  }
+  .hero-upload:hover {
+    border-color: #38bdf8;
+    background: linear-gradient(180deg, #243246, #1e293b);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px -16px rgba(56,189,248,0.4);
+  }
+  .hero-upload input { display: none; }
+  .hero-upload-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(56,189,248,0.15);
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+  }
+  .hero-upload-text strong {
+    display: block;
+    font-size: 16px;
+    color: #f1f5f9;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .hero-upload-text span {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+  }
+  .features {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 24px;
+  }
+  @media (max-width: 600px) {
+    .features { grid-template-columns: 1fr; }
+    .hero-title { font-size: 28px; }
+  }
+  .feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    text-align: left;
+  }
+  .feature-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-top: 7px;
+    flex: 0 0 auto;
+  }
+  .feature-text h4 {
+    margin: 0 0 4px;
+    font-size: 13px;
+    color: #f1f5f9;
+    font-weight: 600;
+  }
+  .feature-text p {
+    margin: 0;
+    font-size: 11px;
+    color: #94a3b8;
+    line-height: 1.4;
+  }
+  .topbar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .topbar h2 {
+    font-size: 18px;
+    margin: 0;
+    color: #f1f5f9;
+    font-weight: 600;
+  }
+  .topbar .muted-inline {
+    font-size: 12px;
+    color: #64748b;
+  }
 
   /* Queue strip */
   .queue-strip {
@@ -386,18 +514,65 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>Image & Reel Design Audit</h1>
-  <p class="sub">Upload images or reels — auto-checks brand colors, contrast, composition, balance, focal point, and whitespace per item (and per frame for videos).</p>
+  <div class="hero" id="hero">
+    <div class="hero-inner">
+      <span class="hero-badge">Design Audit</span>
+      <h1 class="hero-title">Audit images &amp; reels<br>against design principles.</h1>
+      <p class="hero-sub">Auto-checks brand-color match, WCAG contrast, composition, balance, focal point, and whitespace — for every image and every frame of a reel.</p>
 
-  <label class="upload" id="uploadBox">
-    <input type="file" id="fileInput" accept="image/*,video/*" multiple />
-    <div class="upload-label">
-      <strong>Click to upload</strong> or drag & drop images and reels here<br>
-      <span style="font-size:12px;color:#64748b">PNG, JPG, WebP &nbsp;·&nbsp; MP4, WebM, MOV &nbsp;·&nbsp; multiple files OK</span>
+      <label class="hero-upload" id="uploadBox">
+        <input type="file" id="fileInput" accept="image/*,video/*" multiple />
+        <div class="hero-upload-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
+        <div class="hero-upload-text">
+          <strong>Drop files here or click to upload</strong>
+          <span>Multiple files OK &nbsp;·&nbsp; PNG · JPG · WebP &nbsp;·&nbsp; MP4 · WebM · MOV</span>
+        </div>
+      </label>
+
+      <div class="features">
+        <div class="feature">
+          <div class="feature-dot" style="background:#38bdf8"></div>
+          <div class="feature-text">
+            <h4>Brand match</h4>
+            <p>What % of pixels match your brand palette.</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-dot" style="background:#22c55e"></div>
+          <div class="feature-text">
+            <h4>WCAG contrast</h4>
+            <p>AA / AAA pass for normal &amp; large text.</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-dot" style="background:#f59e0b"></div>
+          <div class="feature-text">
+            <h4>Composition</h4>
+            <p>Rule of thirds, balance, focal point.</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-dot" style="background:#f43f5e"></div>
+          <div class="feature-text">
+            <h4>Reel-aware</h4>
+            <p>12 frames sampled per video.</p>
+          </div>
+        </div>
+      </div>
     </div>
-  </label>
+  </div>
 
   <div id="workArea" style="display:none">
+    <div class="topbar">
+      <h2>Image &amp; Reel Design Audit</h2>
+      <span class="muted-inline">Brand · contrast · composition · whitespace</span>
+    </div>
     <div class="queue-strip" id="queueStrip"></div>
 
     <div class="grid">
@@ -820,7 +995,7 @@ async function handleFiles(fileList) {
     state.items.push(item);
     renderQueue();
     workArea.style.display = 'block';
-    uploadBox.style.display = 'none';
+    document.getElementById('hero').style.display = 'none';
     try {
       if (isVideo) await loadVideo(item, f);
       else await loadImage(item, f);
@@ -1033,7 +1208,7 @@ function removeItem(id) {
   renderBatchSummary();
   if (!state.selectedItemId) {
     workArea.style.display = 'none';
-    uploadBox.style.display = 'block';
+    document.getElementById('hero').style.display = 'flex';
     fileInput.value = '';
   } else {
     renderFilmstrip();
