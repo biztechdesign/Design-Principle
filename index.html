@@ -252,7 +252,52 @@
     border-radius: 12px;
     padding: 16px;
   }
-  .canvas-card { position: relative; }
+  .canvas-card {
+    position: sticky;
+    top: 16px;
+    align-self: start;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+  }
+  .canvas-card.no-sticky { position: relative; top: auto; max-height: none; overflow: visible; }
+  @media (max-width: 980px) {
+    .canvas-card { position: relative; top: auto; max-height: none; overflow: visible; }
+  }
+
+  /* Frame navigator buttons */
+  .frame-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 8px;
+  }
+  .frame-nav button {
+    background: #334155;
+    color: #e2e8f0;
+    border: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .frame-nav button:hover:not(:disabled) { background: #475569; }
+  .frame-nav button:disabled { opacity: 0.35; cursor: not-allowed; }
+  .frame-nav .frame-label {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    color: #cbd5e1;
+    min-width: 56px;
+    text-align: center;
+    background: #0f172a;
+    padding: 4px 6px;
+    border-radius: 4px;
+  }
 
   /* Eyedropper ring + tooltip */
   .eyedrop-ring {
@@ -1052,7 +1097,14 @@
     <div class="grid">
       <div class="canvas-card">
         <div class="canvas-toolbar">
-          <label><input type="checkbox" id="overlayToggle" checked> Show composition overlay</label>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <label><input type="checkbox" id="overlayToggle" checked> Show composition overlay</label>
+            <div class="frame-nav" id="frameNav" style="display:none">
+              <button id="prevFrameBtn" type="button" title="Previous frame (←)">‹</button>
+              <span class="frame-label" id="frameNavLabel">1 / 12</span>
+              <button id="nextFrameBtn" type="button" title="Next frame (→)">›</button>
+            </div>
+          </div>
           <span class="meta" id="itemMeta"></span>
         </div>
         <canvas id="canvas"></canvas>
@@ -2252,7 +2304,21 @@ function renderQueue() {
   queueStrip.appendChild(addBtn);
 }
 
+function renderFrameNav() {
+  const nav = document.getElementById('frameNav');
+  const item = currentItem();
+  if (!item || item.type !== 'video' || !item.frames.length) {
+    nav.style.display = 'none';
+    return;
+  }
+  nav.style.display = 'inline-flex';
+  document.getElementById('frameNavLabel').textContent = `${state.selectedFrameIdx + 1} / ${item.frames.length}`;
+  document.getElementById('prevFrameBtn').disabled = state.selectedFrameIdx <= 0;
+  document.getElementById('nextFrameBtn').disabled = state.selectedFrameIdx >= item.frames.length - 1;
+}
+
 function renderFilmstrip() {
+  renderFrameNav();
   const item = currentItem();
   if (!item || item.type !== 'video' || !item.frames.length) {
     filmstrip.style.display = 'none';
@@ -3343,6 +3409,18 @@ document.querySelectorAll('.sim-btn').forEach(btn => {
 document.getElementById('reelSafeZoneToggle').addEventListener('change', e => {
   state.showReelSafeZone = e.target.checked;
   redrawWithOverlay();
+});
+
+// Frame nav buttons
+document.getElementById('prevFrameBtn').addEventListener('click', () => {
+  const item = currentItem();
+  if (!item || item.type !== 'video') return;
+  if (state.selectedFrameIdx > 0) selectFrame(state.selectedFrameIdx - 1);
+});
+document.getElementById('nextFrameBtn').addEventListener('click', () => {
+  const item = currentItem();
+  if (!item || item.type !== 'video') return;
+  if (state.selectedFrameIdx < item.frames.length - 1) selectFrame(state.selectedFrameIdx + 1);
 });
 
 // ============================================================
