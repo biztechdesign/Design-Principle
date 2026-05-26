@@ -346,6 +346,71 @@
   .batch-note { margin: -4px 0 10px; font-size: 11px; color: #64748b; line-height: 1.4; }
   .batch-note b { color: #94a3b8; }
 
+  /* Comparison table */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    font-family: ui-monospace, Menlo, monospace;
+  }
+  .compare-table th {
+    text-align: right;
+    padding: 8px 4px 6px;
+    color: #94a3b8;
+    font-weight: 600;
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-bottom: 1px solid #334155;
+    white-space: nowrap;
+  }
+  .compare-table th:first-child { text-align: left; }
+  .compare-table td {
+    text-align: right;
+    padding: 7px 4px;
+    color: #cbd5e1;
+    border-bottom: 1px solid #1e293b;
+    white-space: nowrap;
+  }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .compare-table .row-name {
+    text-align: left;
+    color: #f1f5f9;
+    font-family: -apple-system, sans-serif;
+    font-size: 12px;
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .compare-table .row-type {
+    background: #334155;
+    color: #94a3b8;
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-weight: 700;
+    margin-right: 5px;
+  }
+  .compare-table .row-type.vid { background: rgba(244,63,94,.7); color: #fff; }
+  .compare-row { cursor: pointer; transition: background .15s; }
+  .compare-row:hover { background: rgba(56,189,248,.06); }
+  .compare-row.active {
+    background: rgba(56,189,248,.14);
+    outline: 1px solid rgba(56,189,248,.45);
+    outline-offset: -1px;
+  }
+  .compare-row.avg-row {
+    background: rgba(255,255,255,.03);
+    cursor: default;
+    color: #f1f5f9;
+    font-weight: 600;
+  }
+  .compare-row.avg-row td { border-top: 1px solid #334155; }
+  .compare-row.avg-row:hover { background: rgba(255,255,255,.03); }
+  .cell-pass { color: #bbf7d0; }
+  .cell-warn { color: #fde68a; }
+  .cell-fail { color: #fecaca; }
+
   /* Selected-item banner */
   .selected-banner {
     background: linear-gradient(135deg, rgba(56,189,248,0.12), rgba(56,189,248,0.04));
@@ -680,8 +745,8 @@
         </div>
 
         <div class="card batch" id="batchCard" style="display:none">
-          <h3 id="batchTitle">Batch averages</h3>
-          <p class="batch-note">Averages across <b>all</b> uploaded items — does not change when you switch the selected item.</p>
+          <h3 id="batchTitle">All items</h3>
+          <p class="batch-note">Each row = one uploaded item. Click any row to switch to that item. The last row is the batch average.</p>
           <div id="batchContent"></div>
         </div>
       </div>
@@ -1227,6 +1292,7 @@ function selectItem(id) {
   renderFilmstrip();
   renderCurrentFrame();
   renderAuditPanel();
+  renderBatchSummary();
 }
 
 function selectFrame(idx) {
@@ -1507,47 +1573,91 @@ function renderBrandResult(brand) {
 // ============================================================
 // BATCH SUMMARY
 // ============================================================
+function truncateName(name, max) {
+  if (!name || name.length <= max) return name || '';
+  const dot = name.lastIndexOf('.');
+  if (dot > 0 && name.length - dot <= 6) {
+    return name.slice(0, max - 5) + '…' + name.slice(dot);
+  }
+  return name.slice(0, max - 1) + '…';
+}
+function cellClass(pct) {
+  if (pct == null || isNaN(pct)) return '';
+  if (pct >= 80) return 'cell-pass';
+  if (pct >= 60) return 'cell-warn';
+  return 'cell-fail';
+}
+function itemAudit(item) {
+  if (item.avgAudit) return item.avgAudit;
+  const f = item.frames[0];
+  if (!f) return null;
+  return {
+    rot: f.audit.composition.rot,
+    hBal: f.audit.composition.hBal,
+    vBal: f.audit.composition.vBal,
+    ws: f.audit.whitespace.pct,
+    ratio: f.audit.contrast ? f.audit.contrast.ratio : null,
+    brandPct: f.audit.brand ? f.audit.brand.pct : null,
+  };
+}
+
 function renderBatchSummary() {
-  if (state.items.length < 2 && !state.items.some(i => i.type === 'video')) {
+  const items = state.items.filter(i => !i.processing && i.frames.length);
+  if (items.length < 2 && !items.some(i => i.type === 'video')) {
     batchCard.style.display = 'none';
     return;
   }
   batchCard.style.display = 'block';
-  let rot = 0, hBal = 0, vBal = 0, ws = 0, brandPct = 0, ratio = 0;
-  let brandCount = 0, ratioCount = 0, n = 0;
-  for (const item of state.items) {
-    if (item.processing || !item.frames.length) continue;
-    const a = item.avgAudit || (item.frames[0].audit && {
-      rot: item.frames[0].audit.composition.rot,
-      hBal: item.frames[0].audit.composition.hBal,
-      vBal: item.frames[0].audit.composition.vBal,
-      ws: item.frames[0].audit.whitespace.pct,
-      ratio: item.frames[0].audit.contrast?.ratio || null,
-      brandPct: item.frames[0].audit.brand?.pct ?? null,
-    });
-    if (!a) continue;
-    rot += a.rot; hBal += a.hBal; vBal += a.vBal; ws += a.ws;
-    if (a.ratio != null) { ratio += a.ratio; ratioCount++; }
-    if (a.brandPct != null) { brandPct += a.brandPct; brandCount++; }
-    n++;
+  document.getElementById('batchTitle').textContent = `All items · ${items.length}`;
+
+  const rows = items.map(item => ({ item, a: itemAudit(item) })).filter(r => r.a);
+  if (!rows.length) { batchCard.style.display = 'none'; return; }
+
+  const showBrand = rows.some(r => r.a.brandPct != null);
+  const showContrast = rows.some(r => r.a.ratio != null);
+
+  let sR = 0, sH = 0, sV = 0, sW = 0, sB = 0, sC = 0;
+  let cB = 0, cC = 0;
+  for (const { a } of rows) {
+    sR += a.rot; sH += a.hBal; sV += a.vBal; sW += a.ws;
+    if (a.ratio != null) { sC += a.ratio; cC++; }
+    if (a.brandPct != null) { sB += a.brandPct; cB++; }
   }
-  if (!n) { batchCard.style.display = 'none'; return; }
-  const imgCount = state.items.filter(i => i.type === 'image').length;
-  const vidCount = state.items.filter(i => i.type === 'video').length;
-  document.getElementById('batchTitle').textContent = `Batch averages · ${imgCount + vidCount} items`;
-  const summary = (label, val, suffix = '%') => {
-    const pct = parseFloat(val);
-    const cls = pct >= 80 ? 'val-pass' : pct >= 60 ? 'val-warn' : 'val-fail';
-    return `<div class="metric-row"><span>${label}</span><span class="metric-val ${cls}">${val}${suffix}</span></div>`;
-  };
-  let html = `<div class="metric-row"><span>Items</span><span class="metric-val">${imgCount} image${imgCount !== 1 ? 's' : ''}, ${vidCount} video${vidCount !== 1 ? 's' : ''}</span></div>`;
-  if (brandCount) html += summary('Avg on-brand', (brandPct / brandCount).toFixed(1));
-  if (ratioCount) html += `<div class="metric-row"><span>Avg contrast</span><span class="metric-val">${(ratio / ratioCount).toFixed(2)} : 1</span></div>`;
-  html += summary('Avg rule of thirds', (rot / n).toFixed(0));
-  html += summary('Avg H-balance', (hBal / n).toFixed(0));
-  html += summary('Avg V-balance', (vBal / n).toFixed(0));
-  html += summary('Avg whitespace', (ws / n).toFixed(1));
+  const n = rows.length;
+
+  let html = '<table class="compare-table"><thead><tr><th>Item</th>';
+  if (showBrand) html += '<th>Brand</th>';
+  if (showContrast) html += '<th>Contrast</th>';
+  html += '<th>ROT</th><th>H-bal</th><th>V-bal</th><th>WS</th></tr></thead><tbody>';
+
+  for (const { item, a } of rows) {
+    const isActive = item.id === state.selectedItemId;
+    const typeTag = item.type === 'video' ? '<span class="row-type vid">VID</span>' : '<span class="row-type">IMG</span>';
+    html += `<tr class="compare-row${isActive ? ' active' : ''}" data-id="${item.id}">`;
+    html += `<td class="row-name" title="${item.name}">${typeTag}${truncateName(item.name, 16)}</td>`;
+    if (showBrand) html += `<td class="${cellClass(a.brandPct)}">${a.brandPct != null ? a.brandPct.toFixed(0) + '%' : '—'}</td>`;
+    if (showContrast) html += `<td>${a.ratio != null ? a.ratio.toFixed(1) : '—'}</td>`;
+    html += `<td class="${cellClass(a.rot)}">${a.rot.toFixed(0)}%</td>`;
+    html += `<td class="${cellClass(a.hBal)}">${a.hBal.toFixed(0)}%</td>`;
+    html += `<td class="${cellClass(a.vBal)}">${a.vBal.toFixed(0)}%</td>`;
+    html += `<td>${a.ws.toFixed(0)}%</td>`;
+    html += '</tr>';
+  }
+
+  // Average row
+  html += '<tr class="compare-row avg-row"><td class="row-name">Average</td>';
+  if (showBrand) html += `<td>${cB ? (sB / cB).toFixed(0) + '%' : '—'}</td>`;
+  if (showContrast) html += `<td>${cC ? (sC / cC).toFixed(1) : '—'}</td>`;
+  html += `<td>${(sR / n).toFixed(0)}%</td>`;
+  html += `<td>${(sH / n).toFixed(0)}%</td>`;
+  html += `<td>${(sV / n).toFixed(0)}%</td>`;
+  html += `<td>${(sW / n).toFixed(0)}%</td>`;
+  html += '</tr></tbody></table>';
+
   batchContent.innerHTML = html;
+  batchContent.querySelectorAll('.compare-row[data-id]').forEach(row => {
+    row.addEventListener('click', () => selectItem(row.dataset.id));
+  });
 }
 
 // ============================================================
