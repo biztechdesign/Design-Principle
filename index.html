@@ -343,6 +343,42 @@
   }
   .card:last-child { margin-bottom: 0; }
   .card.batch { border-color: #38bdf8; background: linear-gradient(180deg, rgba(56,189,248,0.06), #0f172a); }
+  .batch-note { margin: -4px 0 10px; font-size: 11px; color: #64748b; line-height: 1.4; }
+  .batch-note b { color: #94a3b8; }
+
+  /* Selected-item banner */
+  .selected-banner {
+    background: linear-gradient(135deg, rgba(56,189,248,0.12), rgba(56,189,248,0.04));
+    border: 1px solid rgba(56,189,248,0.25);
+    color: #e2e8f0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .selected-banner::before {
+    content: '';
+    width: 8px; height: 8px;
+    background: #38bdf8;
+    border-radius: 50%;
+    flex: 0 0 auto;
+  }
+  .selected-banner .sel-name {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    flex: 1; min-width: 0;
+    font-family: ui-monospace, Menlo, monospace;
+    color: #f1f5f9;
+  }
+  .selected-banner .sel-meta {
+    color: #94a3b8;
+    font-weight: 500;
+    font-size: 11px;
+    flex: 0 0 auto;
+  }
 
   /* Brand colors */
   .brand-input-row { display: flex; gap: 8px; margin-bottom: 8px; }
@@ -587,10 +623,7 @@
       </div>
 
       <div class="panel">
-        <div class="card batch" id="batchCard" style="display:none">
-          <h3>Batch averages</h3>
-          <div id="batchContent"></div>
-        </div>
+        <div class="selected-banner" id="selectedBanner">Selected item</div>
 
         <div class="card">
           <h3>Brand colors</h3>
@@ -644,6 +677,12 @@
           <h3>Whitespace</h3>
           <div class="ws-val" id="wsVal">—</div>
           <div class="ws-verdict" id="wsVerdict"><span class="badge pending">—</span></div>
+        </div>
+
+        <div class="card batch" id="batchCard" style="display:none">
+          <h3 id="batchTitle">Batch averages</h3>
+          <p class="batch-note">Averages across <b>all</b> uploaded items — does not change when you switch the selected item.</p>
+          <div id="batchContent"></div>
         </div>
       </div>
     </div>
@@ -1389,10 +1428,25 @@ function updateContrastUI() {
   setBadge('aaaLarge', cr >= 4.5);
 }
 
+function renderSelectedBanner() {
+  const item = currentItem();
+  const frame = currentFrame();
+  const banner = document.getElementById('selectedBanner');
+  if (!item || !frame) {
+    banner.innerHTML = '<span class="sel-name">No item selected</span>';
+    return;
+  }
+  const meta = item.type === 'video'
+    ? `Frame ${state.selectedFrameIdx + 1}/${item.frames.length} · ${frame.t.toFixed(1)}s`
+    : 'Image';
+  banner.innerHTML = `<span class="sel-name">${item.name}</span><span class="sel-meta">${meta}</span>`;
+}
+
 function renderAuditPanel() {
   const frame = currentFrame();
   if (!frame) return;
   const audit = frame.audit;
+  renderSelectedBanner();
 
   // Contrast — auto fill from detection
   if (audit.contrast) {
@@ -1480,6 +1534,7 @@ function renderBatchSummary() {
   if (!n) { batchCard.style.display = 'none'; return; }
   const imgCount = state.items.filter(i => i.type === 'image').length;
   const vidCount = state.items.filter(i => i.type === 'video').length;
+  document.getElementById('batchTitle').textContent = `Batch averages · ${imgCount + vidCount} items`;
   const summary = (label, val, suffix = '%') => {
     const pct = parseFloat(val);
     const cls = pct >= 80 ? 'val-pass' : pct >= 60 ? 'val-warn' : 'val-fail';
